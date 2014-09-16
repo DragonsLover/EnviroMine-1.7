@@ -18,9 +18,11 @@ import enviromine.EntityPhysicsBlock;
 import enviromine.blocks.tiles.TileEntityDavyLamp;
 import enviromine.blocks.tiles.TileEntityElevatorBottom;
 import enviromine.blocks.tiles.TileEntityElevatorTop;
+import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.EM_GuiEnviroMeters;
-import enviromine.client.gui.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
+import enviromine.client.hud.HUDRegistry;
+import enviromine.client.hud.items.HudItemTemperature;
 import enviromine.client.renderer.itemInventory.ArmoredCamelPackRenderer;
 import enviromine.client.renderer.tileentity.RenderGasHandler;
 import enviromine.client.renderer.tileentity.TileEntityDavyLampRenderer;
@@ -61,7 +63,7 @@ public class EM_ClientProxy extends EM_CommonProxy
 	public void registerEventHandlers()
 	{
 		super.registerEventHandlers();
-		MinecraftForge.EVENT_BUS.register(new EM_GuiEnviroMeters(Minecraft.getMinecraft(), Minecraft.getMinecraft().getResourceManager()));
+		//MinecraftForge.EVENT_BUS.register(new EM_GuiEnviroMeters(Minecraft.getMinecraft(), Minecraft.getMinecraft().getResourceManager()));
 		MinecraftForge.EVENT_BUS.register(new ObjectHandler());
 		MinecraftForge.EVENT_BUS.register(new Gui_EventManager());
 		FMLCommonHandler.instance().bus().register(new EnviroKeybinds());
@@ -71,6 +73,8 @@ public class EM_ClientProxy extends EM_CommonProxy
 	public void preInit(FMLPreInitializationEvent event)
 	{
 		super.preInit(event);
+		
+		registerHudItems();
 	}
 	
 	@Override
@@ -112,6 +116,14 @@ public class EM_ClientProxy extends EM_CommonProxy
 			 }	 
 		 }
 		
+	}
+	
+	
+	@SideOnly(Side.CLIENT)
+	public static void registerHudItems()
+	{
+        HUDRegistry.registerHudItem(new HudItemTemperature());
+        HUDRegistry.setInitialLoadComplete(true);
 	}
 	
 	@Override
