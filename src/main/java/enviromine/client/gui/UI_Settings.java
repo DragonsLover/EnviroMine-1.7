@@ -336,4 +336,33 @@ public static File[] getConfigs()
 		//HUDRegistry.getMinecraftInstance();
 	}
 
+	public static void writeToNBT(NBTTagCompound nbt) 
+	{
+		
+    	nbt.setBoolean("ShowGuiIcons", ShowGuiIcons); 
+    	nbt.setFloat("guiScale", guiScale);
+    	nbt.setBoolean("sweatParticals", sweatParticals);
+    	nbt.setBoolean("insaneParticals", insaneParticals);
+    	nbt.setBoolean("useFarenheit", useFarenheit);
+    	nbt.setString("heatBarPos", heatBarPos); 
+    	nbt.setString("waterBarPos", waterBarPos); 
+    	nbt.setString("sanityBarPos", sanityBarPos);  
+    	nbt.setString("oxygenBarPos", oxygenBarPos); 
+    	nbt.setBoolean("ShowText", ShowText);
+    	nbt.setBoolean("ShowDebug", ShowDebug);
+    	nbt.setBoolean("breathSound", breathSound);
+    	nbt.setInteger("breathPause", breathPause);
+    	nbt.setFloat("breathVolume", breathVolume);
+    	nbt.setBoolean("minimalHud",minimalHud); 
+
+    	
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public static void readFromNBT()
+	{
+		
+	}
+
 }

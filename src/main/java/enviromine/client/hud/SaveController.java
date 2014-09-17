@@ -11,6 +11,7 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
+import enviromine.client.gui.UI_Settings;
 import enviromine.core.EnviroMine;
 
 public class SaveController {
@@ -75,6 +76,7 @@ public class SaveController {
 
             NBTTagCompound globalNBT = new NBTTagCompound();
             HUDRegistry.writeToNBT(globalNBT);
+            UI_Settings.writeToNBT(globalNBT);
             nbt.setTag("global", globalNBT);
 
             for (HudItem item : HUDRegistry.getHudItemList()) {
