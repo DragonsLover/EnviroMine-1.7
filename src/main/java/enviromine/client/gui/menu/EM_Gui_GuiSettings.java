@@ -10,6 +10,8 @@ import cpw.mods.fml.client.config.GuiSlider;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import enviromine.client.gui.UI_Settings;
+import enviromine.client.hud.HUDRegistry;
+import enviromine.client.hud.HudItem;
 
 @SideOnly(Side.CLIENT)
 public class EM_Gui_GuiSettings extends GuiScreen
@@ -127,6 +129,10 @@ public class EM_Gui_GuiSettings extends GuiScreen
 					break;
 				case 157:
 					this.mc.displayGuiScreen(new EM_Gui_Bars(this));
+					
+					 HudItem hudItem = HUDRegistry.getHudItemByID(0);
+					
+					this.mc.displayGuiScreen(new GuiScreenReposition(this, hudItem));
 					break;
 				case 158:
 					UI_Settings.minimalHud = !UI_Settings.minimalHud;

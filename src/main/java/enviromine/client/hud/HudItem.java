@@ -112,14 +112,14 @@ public abstract class HudItem {
 		if(UI_Settings.minimalHud) 
 		{
 			if(!isLeftSide())
-				return posX + 16;
+				return posX - getTextFrameWidth();
 			else
 				return posX;
 		}
 		else
 		{
 			if(!isLeftSide())
-				return posX;
+				return posX - getTextFrameWidth();
 			else 
 				return posX + getWidth();
 		}
