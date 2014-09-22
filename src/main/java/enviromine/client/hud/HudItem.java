@@ -109,26 +109,28 @@ public abstract class HudItem {
 	
 	public int getTextPosX()
 	{
-		if(UI_Settings.minimalHud) 
-		{
-			if(!isLeftSide())
-				return posX - getTextFrameWidth();
+		
+			if(UI_Settings.minimalHud) 
+			{
+				if(!isLeftSide())
+					return posX - getTextFrameWidth();
+				else
+					return posX;
+			}
 			else
-				return posX;
-		}
-		else
-		{
-			if(!isLeftSide())
-				return posX - getTextFrameWidth();
-			else 
-				return posX + getWidth();
-		}
+			{
+				if(!isLeftSide())
+					return posX - getTextFrameWidth();
+				else 
+					return posX + getWidth();
+			}
 	}
 	
 	public int getTotalBarWidth()
 	{
 		return  (getWidth() + getTextFrameWidth() + 16);
 	}
+	
 	
 	public boolean isLeftSide()
 	{

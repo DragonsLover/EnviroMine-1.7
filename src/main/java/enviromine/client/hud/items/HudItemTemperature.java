@@ -77,11 +77,7 @@ public class HudItemTemperature extends HudItem {
 	@Override
 	public void render()
 	{
-		GL11.glPushMatrix();
-		
-		GL11.glTranslatef(posX +(this.getWidth()/2), posY +(this.getHeight()/2), 0);
-		GL11.glRotatef(90.f, 0.f, 0.f, 1.f);
-		GL11.glTranslatef(-this.getWidth()/2, -this.getHeight()/2, 0);
+
 		
         
 		int heatBar = MathHelper.ceiling_float_int(((Gui_EventManager.tracker.bodyTemp + 50) / 150) * this.getWidth());
@@ -107,6 +103,15 @@ public class HudItemTemperature extends HudItem {
 			
 		if(!UI_Settings.minimalHud)
 		{
+			int angle = 90;
+			GL11.glPushMatrix();
+
+			if(this.rotated)
+			{
+				GL11.glTranslatef(posX,posY, 0);
+				GL11.glRotatef( angle, 0, 0, 1 );
+				GL11.glTranslatef(-posX+(this.getHeight()/2),-posY -(this.getWidth()/2) -this.getHeight(), 0);
+			}
 			//heat Bar
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, 24, getWidth(), getHeight());
 		
@@ -117,6 +122,9 @@ public class HudItemTemperature extends HudItem {
 			//Frame
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, getHeight() * frameBorder, getWidth(), getHeight());
 
+			
+			
+			GL11.glPopMatrix();
 		}
 		
 		if(UI_Settings.ShowGuiIcons == true)
@@ -133,6 +141,8 @@ public class HudItemTemperature extends HudItem {
 			{
 				RenderAssist.drawTexturedModalRect(iconPosX, posY - 4 + preheatIco, 0, 96 + preheatIco, 16, 16-preheatIco);
 			}
+			
+			
 		}
 		
 		if(UI_Settings.ShowText == true)
@@ -149,9 +159,7 @@ public class HudItemTemperature extends HudItem {
 					Minecraft.getMinecraft().fontRenderer.drawString(dispHeat + "C", getTextPosX(), posY, 16777215);
 				}
 		}
-		
-		
-		GL11.glPopMatrix();
+
 
 	}
 
