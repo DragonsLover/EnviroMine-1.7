@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
@@ -25,7 +26,6 @@ import enviromine.core.EnviroMine;
 import enviromine.handlers.EM_StatusManager;
 import enviromine.trackers.properties.DimensionProperties;
 import enviromine.trackers.properties.EntityProperties;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -55,6 +55,7 @@ public class EnviroDataTracker
 	public int itemUse = 0;
 	
 	public int frostbiteLevel = 0;
+	public boolean frostIrreversible = false;
 	
 	public boolean brokenLeg = false;
 	public boolean brokenArm = false;
@@ -101,7 +102,7 @@ public class EnviroDataTracker
 		{
 			if(trackedEntity instanceof EntityPlayer)
 			{
-				EntityPlayer player = EM_StatusManager.findPlayer(trackedEntity.getUniqueID());
+				EntityPlayer player = EM_StatusManager.findPlayer(trackedEntity.getCommandSenderName());
 				
 				if(player == null)
 				{
@@ -155,8 +156,6 @@ public class EnviroDataTracker
 		ItemStack helmet = trackedEntity.getEquipmentInSlot(4);
 		if(helmet != null && !isCreative)
 		{
-			//if(helmet.getItem() == ObjectHandler.gasMask)
-		    //{
 				if(helmet.hasTagCompound() && helmet.getTagCompound().hasKey("gasMaskFill"))
 				{
 					NBTTagCompound tag = helmet.getTagCompound();
@@ -170,32 +169,11 @@ public class EnviroDataTracker
 						{
 							enviroData[0] = 0;
 							tag.setInteger("gasMaskFill", (gasMaskFill + airDrop));
-							//helmet.setItemDamage(helmet.getItemDamage() - airDrop);
 						} else
 						{
 							tag.setInteger("gasMaskFill", 0);
-							//helmet.setItemDamage(helmet.getMaxDamage());
 						}
 					}
-					
-				//}
-				//TODO Replacing Old Damage System
-				/*
-				if(helmet.getItemDamage() < helmet.getMaxDamage() && airQuality <= 99F)
-				{
-					int airDrop = MathHelper.floor_float(enviroData[0]);
-					
-					enviroData[0] -= helmet.getMaxDamage() - helmet.getItemDamage();
-					
-					if(enviroData[0] <= 0)
-					{
-						enviroData[0] = 0;
-						helmet.setItemDamage(helmet.getItemDamage() - airDrop);
-					} else
-					{
-						helmet.setItemDamage(helmet.getMaxDamage());
-					}
-				}*/
 			}
 		}
 		
@@ -344,22 +322,6 @@ public class EnviroDataTracker
 		
 		if(plate != null && !isCreative)
 		{
-			//TODO Changed Camel packs to also read from NBT tags
-			//if(plate.getItem() == ObjectHandler.camelPack)
-			//{
-				/*
-				if(plate.getItemDamage() < plate.getMaxDamage() && hydration <= 99F - EM_Settings.hydrationMult)
-				{
-					plate.setItemDamage(plate.getItemDamage() + 1);
-					hydrate((float)EM_Settings.hydrationMult);
-					
-					if(bodyTemp >= 37F + EM_Settings.tempMult/10F)
-					{
-						bodyTemp -= EM_Settings.tempMult/10F;
-					}
-				}
-			} else*/
-				
 			if (plate.hasTagCompound() && plate.getTagCompound().hasKey("camelPackFill"))
 			{
 				int fill = plate.getTagCompound().getInteger("camelPackFill");
@@ -409,8 +371,7 @@ public class EnviroDataTracker
 				trackedEntity.attackEntityFrom(EnviroDamageSource.suffocate, 4.0F);
 				
 				trackedEntity.worldObj.playSoundAtEntity(trackedEntity, "enviromine:gag", 1f, 1f);
-				//mc.sndManager.playSound("enviromine:gag", (float)trackedEntity.posX, (float)trackedEntity.posY, (float)trackedEntity.posZ, EM_Settings.breathVolume, 1.0F);
-			}
+     		}
 			
 			if(airQuality <= 10F)
 			{
@@ -459,14 +420,13 @@ public class EnviroDataTracker
 					trackedEntity.addPotionEffect(new PotionEffect(EnviroPotion.hypothermia.id, 200, 0));
 				}
 				
-				if (this.side.isClient()) {
-					System.out.println("Check:" + Minecraft.getSystemTime() +"-"+ chillPrevTime +"="+(Minecraft.getSystemTime() - chillPrevTime));
-					
+				if (this.side.isClient()) 
+				{
 					playSoundWithTimeCheck(17000, "enviromine:chill",  UI_Settings.breathVolume, 1.0F);
 				}
 			}
 			
-			if(((timeBelow10 >= 120 && enableFrostbite) || (frostbiteLevel >= 1 && enableFrostbite)))
+			if(enableFrostbite && (timeBelow10 >= 120 || (frostbiteLevel >= 1 && frostIrreversible)))
 			{
 				if(timeBelow10 >= 240 || frostbiteLevel >= 2)
 				{
@@ -486,10 +446,25 @@ public class EnviroDataTracker
 					}
 				}
 				
+				// If frostbite is treated before this time then you can save your limbs!
+				if(timeBelow10 > 360 && !frostIrreversible)
+				{
+					frostIrreversible = true;
+					
+					if(trackedEntity instanceof EntityPlayer)
+					{
+						((EntityPlayer)trackedEntity).addChatComponentMessage(new ChatComponentText("The flesh in your limbs have gone rock hard!"));
+						((EntityPlayer)trackedEntity).addChatComponentMessage(new ChatComponentText("Your condition is now permanent!"));
+					}
+				}
+				
 				
 				if (this.side.isClient()) {
 					playSoundWithTimeCheck(1700, "enviromine:chill",  UI_Settings.breathVolume, 1.0F);
 				}
+			} else if(!frostIrreversible || !enableFrostbite)
+			{
+				frostbiteLevel = 0;
 			}
 			
 			if(bodyTemp >= 45F && enviroData[2] == 1)

@@ -80,7 +80,8 @@ public class EM_Settings
 	//Gases
 	public static boolean renderGases = false;
 	public static int gasTickRate = 32; //GasFires are 4x faster than this
-	public static int gasPassLimit = 512;
+	public static int gasPassLimit = -1;
+	public static boolean gasWaterLike = true;
 	
 	//World Gen
 	public static boolean shaftGen = true;
@@ -90,7 +91,7 @@ public class EM_Settings
 	//Properties
 	@ShouldOverride("enviromine.network.packet.encoders.ArmorPropsEncoder")
 	public static HashMap<String,ArmorProperties> armorProperties = new HashMap<String,ArmorProperties>();
-	@ShouldOverride("enviromine.network.packet.encoders.BlocksPropsEncoder")
+	//@ShouldOverride("enviromine.network.packet.encoders.BlocksPropsEncoder")
 	public static HashMap<String,BlockProperties> blockProperties = new HashMap<String,BlockProperties>();
 	public static HashMap<Integer,EntityProperties> livingProperties = new HashMap<Integer,EntityProperties>();
 	public static HashMap<String,ItemProperties> itemProperties = new HashMap<String,ItemProperties>();
@@ -120,6 +121,9 @@ public class EM_Settings
 	public static int entityFailsafe;
 	public static boolean villageAssist;
 	public static boolean minimalHud;
+	public static boolean limitCauldron;
+	public static boolean allowTinting;
+	public static boolean torchesBurn;
 	
 	public static int caveDimID = -3;
 	public static int caveBiomeID = 23;
@@ -129,6 +133,15 @@ public class EM_Settings
 	
 	/** Whether or not this overridden with server settings */
 	public static boolean isOverridden = false;
+	
+	public static boolean enableQuakes = true;
+	public static boolean quakePhysics = true;
+	public static int quakeRarity = 100;
+	public static int quakeDelay = 10;
+	public static int quakeMode = 2;
+	public static int quakeSpeed = 2;
+	
+	public static boolean finiteWater = false;
 	
 	public static float convertToFarenheit(float num)
 	{

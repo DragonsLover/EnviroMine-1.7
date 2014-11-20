@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Level;
 import enviromine.core.EM_ConfigHandler;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
+import enviromine.utils.ModIdentification;
 
 public class DimensionProperties
 {
@@ -43,9 +44,7 @@ public class DimensionProperties
 		this.darkAffectSanity = darkAffectSanity;
 		this.sanityMultiplyer = sanityMultiplyer;
 		this.trackAirQuality = trackAirQuality;
-		System.out.println("Setting multiplier to "+airMulti+" for "+id);
 		this.airMulti = airMulti;
-		System.out.println("Set multiplier to "+this.airMulti);
 		this.trackHydration = trackHydration;
 		this.hydrationMulti = hydrationMulti;
 		this.trackTemp = trackTemp;
@@ -90,17 +89,17 @@ public class DimensionProperties
 		{
 			WorldProvider dimension = WorldProvider.getProviderForDimension(DimensionIds[p]);
 			
-			String[] modname = dimension.getClass().getCanonicalName().toString().trim().toLowerCase().split("\\.");
-			
-			//System.out.println(modname[0]);
-			if(modname[0].equalsIgnoreCase("net") && EM_Settings.useDefaultConfig == true)//If Vanilla
+			String modname  = ModIdentification.nameFromObject((Object) dimension);
+
+			if(modname.trim() == "Minecraft")
 			{
 				SaveConfig(dimension, "Defaults");
 			}
 			else
 			{
-				SaveConfig(dimension, modname[0]);
+				SaveConfig(dimension, modname);
 			}
+			
 		}
 	}
 	

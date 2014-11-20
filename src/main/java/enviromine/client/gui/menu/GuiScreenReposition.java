@@ -5,9 +5,10 @@ import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import enviromine.Utils.Alignment;
+import enviromine.client.gui.UI_Settings;
 import enviromine.client.hud.HudItem;
 import enviromine.client.hud.SaveController;
+import enviromine.utils.Alignment;
 
 public class GuiScreenReposition extends GuiScreen {
 	protected GuiScreen parentScreen;

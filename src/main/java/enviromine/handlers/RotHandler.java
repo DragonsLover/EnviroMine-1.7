@@ -1,15 +1,17 @@
 package enviromine.handlers;
 
+import org.apache.logging.log4j.Level;
 import enviromine.core.EM_Settings;
+import enviromine.core.EnviroMine;
 import enviromine.items.RottenFood;
 import enviromine.trackers.properties.RotProperties;
-
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 public class RotHandler
@@ -49,7 +51,17 @@ public class RotHandler
 				return item;
 			} else if(UBD + rotTime < world.getTotalWorldTime())
 			{
-				ItemStack rotStack = new ItemStack(ObjectHandler.rottenFood, item.stackSize);
+				ItemStack rotStack;
+				if(rotProps != null && Item.itemRegistry.getObject(rotProps.rotID) != null)
+				{
+					rotStack = new ItemStack((Item)Item.itemRegistry.getObject(rotProps.rotID), item.stackSize, rotProps.rotMeta < 0? item.getItemDamage() : rotProps.rotMeta);
+				} else if(item.getItem() == Items.beef || item.getItem() == Items.chicken || item.getItem() == Items.porkchop || item.getItem() == Items.fish || item.getItem() == Items.cooked_beef || item.getItem() == Items.cooked_chicken || item.getItem() == Items.cooked_porkchop || item.getItem() == Items.cooked_fished)
+				{
+					rotStack = new ItemStack(Items.rotten_flesh, item.stackSize);
+				} else
+				{
+					rotStack = new ItemStack(ObjectHandler.rottenFood, item.stackSize);
+				}
 				rotStack.setStackDisplayName("Rotten " + item.getDisplayName());
 				return rotStack;
 			} else
@@ -62,6 +74,15 @@ public class RotHandler
 	
 	public static void rotInvo(World world, IInventory inventory)
 	{
+		if(inventory == null || inventory.getSizeInventory() <= 0 || world.isRemote)
+		{
+			return;
+		}
+		
+		boolean flag = false;
+		
+		try
+		{
 		for(int i = 0; i < inventory.getSizeInventory(); i++)
 		{
 			ItemStack slotItem = inventory.getStackInSlot(i);
@@ -73,8 +94,19 @@ public class RotHandler
 				if(rotItem != slotItem)
 				{
 					inventory.setInventorySlotContents(i, rotItem);
+					flag = true;
 				}
 			}
+		}
+		
+		if(flag && inventory instanceof TileEntity)
+		{
+			((TileEntity)inventory).markDirty();
+		}
+		} catch(Exception e)
+		{
+			EnviroMine.logger.log(Level.ERROR, "An error occured while attempting to rot inventory:", e);
+			return;
 		}
 	}
 }

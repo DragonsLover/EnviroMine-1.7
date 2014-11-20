@@ -1,20 +1,5 @@
 package enviromine.core;
 
-import net.minecraft.potion.Potion;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-
-import cpw.mods.fml.common.registry.EntityRegistry;
-
-import enviromine.trackers.properties.ArmorProperties;
-import enviromine.trackers.properties.BiomeProperties;
-import enviromine.trackers.properties.BlockProperties;
-import enviromine.trackers.properties.DimensionProperties;
-import enviromine.trackers.properties.EntityProperties;
-import enviromine.trackers.properties.ItemProperties;
-import enviromine.trackers.properties.RotProperties;
-import enviromine.trackers.properties.StabilityType;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,7 +8,21 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.minecraft.potion.Potion;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
+
 import org.apache.logging.log4j.Level;
+
+import cpw.mods.fml.common.registry.EntityRegistry;
+import enviromine.trackers.properties.ArmorProperties;
+import enviromine.trackers.properties.BiomeProperties;
+import enviromine.trackers.properties.BlockProperties;
+import enviromine.trackers.properties.DimensionProperties;
+import enviromine.trackers.properties.EntityProperties;
+import enviromine.trackers.properties.ItemProperties;
+import enviromine.trackers.properties.RotProperties;
+import enviromine.trackers.properties.StabilityType;
 
 public class EM_ConfigHandler
 {
@@ -137,7 +136,9 @@ public class EM_ConfigHandler
 		EM_Settings.physBlockID = config.get(Configuration.CATEGORY_GENERAL, "EntityPhysicsBlock ID", EntityRegistry.findGlobalUniqueEntityId()).getInt(EntityRegistry.findGlobalUniqueEntityId());
 		EM_Settings.villageAssist = config.get(Configuration.CATEGORY_GENERAL, "Enable villager assistance", true).getBoolean(true);
 		EM_Settings.foodSpoiling = config.get(Configuration.CATEGORY_GENERAL, "Enable food spoiling", true).getBoolean(true);
-		EM_Settings.foodRotTime = config.get(Configuration.CATEGORY_GENERAL, "Default spoil time (days)", 10D).getDouble(10D);
+		EM_Settings.foodRotTime = config.get(Configuration.CATEGORY_GENERAL, "Default spoil time (days)", 7D).getDouble(7D);
+		EM_Settings.torchesBurn = config.get(Configuration.CATEGORY_GENERAL, "Torches burn", true).getBoolean(true);
+		EM_Settings.finiteWater = config.get(Configuration.CATEGORY_GENERAL, "Finite Water", false).getBoolean(false);
 		
 		// Physics Settings
 		String PhySetCat = "Physics";
@@ -153,9 +154,10 @@ public class EM_ConfigHandler
 		EM_Settings.entityFailsafe = config.get(PhySetCat, "Physics entity fail safe level", 1, "0 = No action, 1 = Limit to < 100 per 8x8 block area, 2 = Delete excessive entities & Dump physics (EMERGENCY ONLY)").getInt(1);
 		
 		// Config Gas
-		EM_Settings.renderGases = config.get("Gases", "Render normal gas", true).getBoolean(true);
-		EM_Settings.gasTickRate = config.get("Gases", "Gas Tick Rate", 128, "How many ticks between gas updates. Gas fires are 1/4 of this.").getInt(128);
-		EM_Settings.gasPassLimit = config.get("Gases", "Gas Pass Limit", 512, "How many gases can be processed in a single pass").getInt(512);
+		EM_Settings.renderGases = config.get("Gases", "Render normal gas", false, "Whether to render gases not normally visable").getBoolean(false);
+		EM_Settings.gasTickRate = config.get("Gases", "Gas Tick Rate", 256, "How many ticks between gas updates. Gas fires are 1/4 of this.").getInt(256);
+		EM_Settings.gasPassLimit = config.get("Gases", "Gas Pass Limit", -1, "How many gases can be processed in a single pass (-1 = infinite)").getInt(-1);
+		EM_Settings.gasWaterLike = config.get("Gases", "Water like spreading", false, "Whether gases should spread like water (faster) or even out as much as possible (realistic)").getBoolean(false);
 		
 		// Potion ID's
 		EM_Settings.hypothermiaPotionID = -1;
@@ -186,6 +188,22 @@ public class EM_ConfigHandler
 		EM_Settings.genArmorConfigs = config.get(ConSetCat, "Generate Armor Configs", true, "Will attempt to find and generate blank configs for any custom armors loaded before EnviroMine.").getBoolean(true);
 		EM_Settings.useDefaultConfig = config.get(ConSetCat, "Generate Defaults", true).getBoolean(true);
 		
+		// Earthquake
+		String EarSetCat = "Earthquakes";
+		EM_Settings.enableQuakes = config.get(EarSetCat, "Enable Earthquakes", true).getBoolean(true);
+		EM_Settings.quakePhysics = config.get(EarSetCat, "Triggers Physics", true, "Can cause major lag at times (Requires main physics to be enabled)").getBoolean(true);
+		EM_Settings.quakeRarity = config.get(EarSetCat, "Rarity", 100).getInt(100);
+		EM_Settings.quakeMode = config.get(EarSetCat, "Mode", 2, "Changes how quakes are created (-1 = random, 0 = wave normal, 1 = centre normal, 2 = centre tear, 3 = wave tear)").getInt(2);
+		EM_Settings.quakeDelay = config.get(EarSetCat, "Tick delay", 10).getInt(10);
+		EM_Settings.quakeSpeed = config.get(EarSetCat, "Speed", 2).getInt(2);
+		if(EM_Settings.quakeRarity <= 0)
+		{
+			EM_Settings.quakeRarity = 1;
+		}
+		if(EM_Settings.quakeSpeed <= 0)
+		{
+			EM_Settings.quakeSpeed = 1;
+		}
 		
 		// REMOVE OLD Settings if they exist
 		// Sound
@@ -408,17 +426,12 @@ public class EM_ConfigHandler
 	}
 
 	
-	public static String SaveMyCustom(String type, String name, Object[] data)
+	public static String SaveMyCustom(String type, String name, String modname, Object[] data)
 	{
-		
+		if(modname.trim() == "Minecraft") modname = "Defaults";
+
 		// Check to make sure this is a Data File Before Editing
-		File configFile = new File(customPath + "MyCustom.cfg");
-		
-		String[] classpath = data.getClass().getCanonicalName().toString().toLowerCase().split("\\.");
-		String classname = "";
-		
-		if (classpath[0].equalsIgnoreCase("net")) classname = "Vanilla";
-		else classname = classpath[0];
+		File configFile = new File(customPath + modname +".cfg");
 		
 		Configuration config;
 		try
@@ -454,7 +467,7 @@ public class EM_ConfigHandler
 			} else
 			{
 
-				config.addCustomCategoryComment(nameULCat, classname + ":" + name);
+				//config.addCustomCategoryComment(nameULCat, classname + ":" + name);
 					int metadata = (Integer)data[1];
 					BlockProperties.SaveProperty(config, nameULCat, (String)data[2], metadata, (String)data[2], metadata, 0, false, 0.00, 0.00, 0.00, "loose", false, false);
 				returnValue = "Saved";
@@ -471,7 +484,7 @@ public class EM_ConfigHandler
 				returnValue = "Removed";
 			} else
 			{
-				config.addCustomCategoryComment(nameEntityCat, classname + ":" + name);
+				config.addCustomCategoryComment(nameEntityCat, modname + ":" + name);
 				EntityProperties.SaveProperty(config, nameEntityCat, (Integer)data[0], true, true, true, true, false, false, 0.0D, 0.0D, 37.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
 				returnValue = "Saved";
 			}
@@ -487,7 +500,7 @@ public class EM_ConfigHandler
 				returnValue = "Removed";
 			} else
 			{
-				config.addCustomCategoryComment(nameItemCat, classname + ":" + name);
+				config.addCustomCategoryComment(nameItemCat, modname + ":" + name);
 					ItemProperties.SaveProperty(config, nameItemCat, (String)data[0], (Integer)data[1], false, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 37.00);
 				returnValue = "Saved";
 			}
@@ -502,7 +515,7 @@ public class EM_ConfigHandler
 				returnValue = "Removed";
 			} else
 			{
-				config.addCustomCategoryComment(nameArmorCat, classname + ":" + name);
+				config.addCustomCategoryComment(nameArmorCat, modname + ":" + name);
 					ArmorProperties.SaveProperty(config, nameArmorCat, (String)data[0], 0.00, 0.00, 0.00, 1.00, 1.00, 1.00, 0.00, 0.00);
 				returnValue = "Saved";
 			}

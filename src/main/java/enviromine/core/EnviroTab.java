@@ -1,11 +1,12 @@
 package enviromine.core;
 
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+
+import enviromine.handlers.ObjectHandler;
 
 public class EnviroTab extends CreativeTabs
 {
@@ -16,6 +17,6 @@ public class EnviroTab extends CreativeTabs
 	@Override
 	@SideOnly(Side.CLIENT)
 	public Item getTabIconItem() {
-		return Items.apple; //TODO set display item
+		return ObjectHandler.camelPack;
 	}
 }

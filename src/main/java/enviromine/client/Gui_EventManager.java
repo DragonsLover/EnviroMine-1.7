@@ -17,16 +17,11 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import org.apache.logging.log4j.Level;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.common.gameevent.TickEvent.RenderTickEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Type;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import enviromine.client.gui.menu.EM_Gui_Menu;
 import enviromine.client.hud.HUDRegistry;
-import enviromine.client.hud.HudHandler;
 import enviromine.client.hud.HudItem;
-import enviromine.client.hud.SaveController;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.handlers.EM_StatusManager;
@@ -88,7 +83,7 @@ public class Gui_EventManager
     
     private Minecraft mc = Minecraft.getMinecraft();
     
-	public static final String guiResource = "textures/gui/status_Gui.png";
+	public static final ResourceLocation guiResource = new ResourceLocation("enviromine", "textures/gui/status_Gui.png");
 	
 	public static EnviroDataTracker tracker = null;
     
@@ -105,12 +100,12 @@ public class Gui_EventManager
 		
 	 	HUDRegistry.checkForResize();
 
-	 	Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation("enviromine", guiResource));
+	 	
 
 	
 		if(tracker != null && (tracker.trackedEntity == null || tracker.trackedEntity.isDead || tracker.trackedEntity.getHealth() <= 0F) && !tracker.isDisabled)
 		{
-			EntityPlayer player = EM_StatusManager.findPlayer(this.mc.thePlayer.getUniqueID());
+			EntityPlayer player = EM_StatusManager.findPlayer(this.mc.thePlayer.getCommandSenderName());
 			
 			if(player != null)
 			{
@@ -139,6 +134,7 @@ public class Gui_EventManager
 		else
 		{
 			
+		HudItem.blinkTick++;
 		
     	for (HudItem huditem : HUDRegistry.getHudItemList()) 
     	{
@@ -150,6 +146,7 @@ public class Gui_EventManager
     		{
     			if (huditem.shouldDrawOnMount()) 
     			{
+    				Minecraft.getMinecraft().renderEngine.bindTexture(huditem.BindResource());
     				huditem.fixBounds();
     				huditem.render();
     			}
@@ -157,6 +154,7 @@ public class Gui_EventManager
     		{
     			if (huditem.shouldDrawAsPlayer()) 
     			{
+    				Minecraft.getMinecraft().renderEngine.bindTexture(huditem.BindResource());
     				huditem.fixBounds();
     				huditem.render();
     			}

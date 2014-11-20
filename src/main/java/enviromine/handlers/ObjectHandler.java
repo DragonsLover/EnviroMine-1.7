@@ -1,5 +1,8 @@
 package enviromine.handlers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -9,32 +12,24 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.sound.SoundLoadEvent;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.oredict.OreDictionary;
+
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+
 import enviromine.EntityPhysicsBlock;
-import enviromine.blocks.BlockDavyLamp;
-import enviromine.blocks.BlockElevatorBottom;
-import enviromine.blocks.BlockElevatorTop;
-import enviromine.blocks.BlockGas;
+import enviromine.blocks.*;
 import enviromine.blocks.materials.MaterialGas;
-import enviromine.blocks.tiles.TileEntityDavyLamp;
-import enviromine.blocks.tiles.TileEntityElevatorBottom;
-import enviromine.blocks.tiles.TileEntityElevatorTop;
-import enviromine.blocks.tiles.TileEntityGas;
+import enviromine.blocks.tiles.*;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
-import enviromine.items.DavyLamp;
-import enviromine.items.EnviroArmor;
-import enviromine.items.EnviroItemBadWaterBottle;
-import enviromine.items.EnviroItemColdWaterBottle;
-import enviromine.items.EnviroItemSaltWaterBottle;
-import enviromine.items.RottenFood;
+import enviromine.items.*;
 
 public class ObjectHandler
 {
+	public static HashMap<Block, ArrayList<Integer>> igniteList = new HashMap<Block, ArrayList<Integer>>();
 	public static ArmorMaterial camelPackMaterial;
 	
 	public static Item badWaterBottle;
@@ -51,12 +46,19 @@ public class ObjectHandler
 	public static ItemArmor hardHat;
 	
 	public static Block davyLampBlock;
-	public static Block elevatorTop;
-	public static Block elevatorBottom;
+	public static Block elevator;
 	public static Block gasBlock;
 	public static Block fireGasBlock;
 	
+	public static Block flammableCoal;
+	public static Block burningCoal;
+	public static Block fireTorch;
+	
+	public static Block esky;
+	public static Block freezer;
+	
 	public static int renderGasID;
+	public static int renderSpecialID;
 	
 	public static Material gasMat;
 	
@@ -93,20 +95,37 @@ public class ObjectHandler
 		gasBlock = new BlockGas(gasMat).setBlockName("enviromine.gas").setCreativeTab(EnviroMine.enviroTab).setBlockTextureName("enviromine:gas_block");
 		fireGasBlock = new BlockGas(gasMat).setBlockName("enviromine.firegas").setCreativeTab(EnviroMine.enviroTab).setBlockTextureName("enviromine:gas_block").setLightLevel(1.0F);
 		
-		elevatorTop = new BlockElevatorTop(Material.iron).setBlockName("enviromine.elevator_top").setCreativeTab(EnviroMine.enviroTab).setBlockTextureName("enviromine:elevator_top_icon");
-		elevatorBottom = new BlockElevatorBottom(Material.iron).setBlockName("enviromine.elevator_bottom").setCreativeTab(EnviroMine.enviroTab).setBlockTextureName("enviromine:elevator_bottom_icon");
+		elevator = new BlockElevator(Material.iron).setBlockName("enviromine.elevator").setCreativeTab(EnviroMine.enviroTab).setBlockTextureName("iron_block");
 		
-		davyLampBlock = new BlockDavyLamp(Material.iron).setBlockName("enviromine.davy_lamp").setCreativeTab(EnviroMine.enviroTab).setBlockTextureName("enviromine:davy_lamp");
-		davyLamp = new DavyLamp(davyLampBlock).setUnlocalizedName("enviromine.davylamp").setCreativeTab(EnviroMine.enviroTab);
+		davyLampBlock = new BlockDavyLamp(Material.iron).setBlockName("enviromine.davy_lamp").setCreativeTab(EnviroMine.enviroTab);
+		davyLamp = new ItemDavyLamp(davyLampBlock).setUnlocalizedName("enviromine.davylamp").setCreativeTab(EnviroMine.enviroTab);
+		
+		flammableCoal = new BlockFlammableCoal();
+		burningCoal = new BlockBurningCoal(Material.rock).setBlockName("enviromine.burningcoal").setCreativeTab(EnviroMine.enviroTab);
+		fireTorch = new BlockFireTorch().setTickRandomly(true).setBlockName("torch").setBlockTextureName("torch_on").setLightLevel(0.9375F).setCreativeTab(EnviroMine.enviroTab);
+		esky = new BlockEsky(Material.iron).setBlockName("enviromine.esky").setCreativeTab(EnviroMine.enviroTab);
+		freezer = new BlockFreezer(Material.iron).setBlockName("enviromine.freezer").setCreativeTab(EnviroMine.enviroTab);
+		
+		Blocks.redstone_torch.setLightLevel(0.9375F);
 	}
 	
 	public static void registerBlocks()
 	{
 		GameRegistry.registerBlock(gasBlock, "gas");
 		GameRegistry.registerBlock(fireGasBlock, "firegas");
-		GameRegistry.registerBlock(elevatorTop, "elevator_top");
-		GameRegistry.registerBlock(elevatorBottom, "elevator_bottom");
-		GameRegistry.registerBlock(davyLampBlock, DavyLamp.class, "davy_lamp");
+		GameRegistry.registerBlock(elevator, ItemElevator.class, "elevator");
+		GameRegistry.registerBlock(davyLampBlock, ItemDavyLamp.class, "davy_lamp");
+		GameRegistry.registerBlock(fireTorch, "firetorch");
+		GameRegistry.registerBlock(burningCoal, "burningcoal");
+		GameRegistry.registerBlock(flammableCoal, "flammablecoal");
+		GameRegistry.registerBlock(esky, "esky");
+		GameRegistry.registerBlock(freezer, "freezer");
+		
+		// Must be done after registration
+		Blocks.fire.setFireInfo(flammableCoal, 60, 100);
+		
+		// Ore Dictionary Stuffs
+		OreDictionary.registerOre("oreCoal", flammableCoal);
 	}
 	
 	public static void registerGases()
@@ -118,9 +137,11 @@ public class ObjectHandler
 		EntityRegistry.registerGlobalEntityID(EntityPhysicsBlock.class, "EnviroPhysicsBlock", EM_Settings.physBlockID);
 		EntityRegistry.registerModEntity(EntityPhysicsBlock.class, "EnviroPhysicsEntity", EM_Settings.physBlockID, EnviroMine.instance, 64, 1, true);
 		GameRegistry.registerTileEntity(TileEntityGas.class, "enviromine.tile.gas");
+		GameRegistry.registerTileEntity(TileEntityBurningCoal.class, "enviromine.tile.burningcoal");
+		GameRegistry.registerTileEntity(TileEntityEsky.class, "enviromine.tile.esky");
+		GameRegistry.registerTileEntity(TileEntityFreezer.class, "enviromine.tile.freezer");
 		
-		GameRegistry.registerTileEntity(TileEntityElevatorTop.class, "enviromine.tile.elevator_top");
-		GameRegistry.registerTileEntity(TileEntityElevatorBottom.class, "enviromine.tile.elevator_bottom");
+		GameRegistry.registerTileEntity(TileEntityElevator.class, "enviromine.tile.elevator");
 		
 
 		GameRegistry.registerTileEntity(TileEntityDavyLamp.class, "enviromine.tile.davy_lamp");
@@ -140,7 +161,7 @@ public class ObjectHandler
 		GameRegistry.addRecipe(new ItemStack(Blocks.mycelium), "xyx", "yzy", "xyx", 'z', new ItemStack(Blocks.grass), 'y', new ItemStack(Blocks.brown_mushroom_block), 'x', new ItemStack(rottenFood, 1));
 		GameRegistry.addRecipe(new ItemStack(Blocks.dirt, 1), "xxx", "xxx", "xxx", 'x', new ItemStack(rottenFood, 1));
 		
-		GameRegistry.addRecipe(new ItemStack(camelPack, 1, camelPack.getMaxDamage()), "xxx", "xyx", "xxx", 'x', new ItemStack(Items.leather), 'y', new ItemStack(Items.glass_bottle));
+		
 		GameRegistry.addRecipe(new ItemStack(gasMask, 1), "xxx", "xzx", "yxy", 'x', new ItemStack(Items.iron_ingot), 'y', new ItemStack(airFilter), 'z', new ItemStack(Blocks.glass_pane));
 		GameRegistry.addRecipe(new ItemStack(hardHat, 1), "xyx", "xzx", 'x', new ItemStack(Items.dye, 1, 11), 'y', new ItemStack(Blocks.redstone_lamp), 'z', new ItemStack(Items.iron_helmet, 1, 0));
 
@@ -149,34 +170,41 @@ public class ObjectHandler
 		GameRegistry.addRecipe(new ItemStack(airFilter, 1), "xyx", "xzx", "xpx", 'x', new ItemStack(Items.iron_ingot), 'y', new ItemStack(Items.paper), 'p', new ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE),'z', new ItemStack(Items.coal, 1, 1));
 		GameRegistry.addRecipe(new ItemStack(airFilter, 1), "xpx", "xzx", "xyx", 'x', new ItemStack(Items.iron_ingot), 'y', new ItemStack(Items.paper), 'p', new ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE),'z', new ItemStack(Items.coal, 1, 1));
 		
-		GameRegistry.addRecipe(new ItemStack(elevatorTop), "xyx", "z z", "z z", 'x', new ItemStack(Blocks.iron_block), 'y', new ItemStack(Blocks.redstone_lamp), 'z', new ItemStack(Blocks.iron_bars));
-		GameRegistry.addRecipe(new ItemStack(elevatorBottom), "z z", "xyx", "www", 'x', new ItemStack(Blocks.iron_block), 'y', new ItemStack(Blocks.furnace), 'z', new ItemStack(Blocks.iron_bars), 'w', new ItemStack(Items.diamond_pickaxe));
+		GameRegistry.addRecipe(new ItemStack(elevator, 1, 0), "xyx", "z z", "z z", 'x', new ItemStack(Blocks.iron_block), 'y', new ItemStack(Blocks.redstone_lamp), 'z', new ItemStack(Blocks.iron_bars));
+		GameRegistry.addRecipe(new ItemStack(elevator, 1, 1), "z z", "xyx", "www", 'x', new ItemStack(Blocks.iron_block), 'y', new ItemStack(Blocks.furnace), 'z', new ItemStack(Blocks.iron_bars), 'w', new ItemStack(Items.diamond_pickaxe));
 		
 		GameRegistry.addRecipe(new ItemStack(davyLampBlock), " x ", "zyz", "xxx", 'x', new ItemStack(Items.gold_ingot), 'y', new ItemStack(Blocks.torch), 'z', new ItemStack(Blocks.glass_pane));
+		GameRegistry.addShapelessRecipe(new ItemStack(davyLampBlock, 1, 1), new ItemStack(davyLampBlock, 1, 0), new ItemStack(Items.flint_and_steel));
+		GameRegistry.addShapelessRecipe(new ItemStack(davyLampBlock, 1, 1), new ItemStack(davyLampBlock, 1, 0), new ItemStack(Blocks.torch));
+		GameRegistry.addShapelessRecipe(new ItemStack(davyLampBlock, 1, 1), new ItemStack(davyLampBlock, 1, 0), new ItemStack(fireTorch));
+		
+		GameRegistry.addRecipe(new ItemStack(esky), "xxx", "yzy", "yyy", 'x', new ItemStack(Blocks.snow), 'y', new ItemStack(Items.dye, 1, 4), 'z', new ItemStack(Blocks.chest));
+		GameRegistry.addRecipe(new ItemStack(freezer), "xyx", "yzy", "xyx", 'x', new ItemStack(Blocks.iron_block), 'y', new ItemStack(Blocks.ice), 'z', new ItemStack(esky));
+		GameRegistry.addRecipe(new ItemStack(freezer), "xyx", "yzy", "xyx", 'x', new ItemStack(Blocks.iron_block), 'y', new ItemStack(Blocks.packed_ice), 'z', new ItemStack(esky));
+		
+		ItemStack camelStack = new ItemStack(camelPack);
+		NBTTagCompound tag = new NBTTagCompound();
+		tag.setInteger("camelPackFill", 0);
+		tag.setInteger("camelPackMax", 100);
+		tag.setBoolean("isCamelPack", true);
+		tag.setString("camelPath", Item.itemRegistry.getNameForObject(camelPack));
+		camelStack.setTagCompound(tag);
+		GameRegistry.addRecipe(camelStack, "xxx", "xyx", "xxx", 'x', new ItemStack(Items.leather), 'y', new ItemStack(Items.glass_bottle));
+		
+		ItemStack camelStack2 = camelStack.copy();
+		camelStack2.getTagCompound().setInteger("camelPackFill", 25);
+		GameRegistry.addRecipe(camelStack2, "xxx", "xyx", "xxx", 'x', new ItemStack(Items.leather), 'y', new ItemStack(Items.potionitem, 1, 0));
 	}
 	
-	//TODO Should Probably be be Removed Sounds.Json now controls this
-	//@ForgeSubscribe
-	public void registerSounds(SoundLoadEvent event)
+	public static void LoadIgnitionSources()
 	{
-		/*
-		// You add them the same way as you add blocks.
-		System.out.println("Loading Sounds");
-		
-		event.manager.addSound("enviromine:gasmask.ogg");
-		
-		event.manager.addSound("enviromine:thingdistant.ogg");
-		event.manager.addSound("enviromine:thingkill.ogg");
-		
-		event.manager.addSound("enviromine:CaveIn.ogg");
-		
-		event.manager.addSound("enviromine:sizzle.ogg");
-		event.manager.addSound("enviromine:chill.ogg");
-		
-		//Random Heavy(Panic) Breathing
-		event.manager.addSound("enviromine:gag1.ogg");
-		event.manager.addSound("enviromine:gag2.ogg");
-		event.manager.addSound("enviromine:gag3.ogg");
-		*/
+		igniteList.put(Blocks.flowing_lava, new ArrayList<Integer>());
+		igniteList.put(Blocks.lava, new ArrayList<Integer>());
+		igniteList.put(Blocks.torch, new ArrayList<Integer>());
+		igniteList.put(Blocks.lit_furnace, new ArrayList<Integer>());
+		igniteList.put(Blocks.fire, new ArrayList<Integer>());
+		igniteList.put(ObjectHandler.fireGasBlock, new ArrayList<Integer>());
+		igniteList.put(ObjectHandler.fireTorch, new ArrayList<Integer>());
+		igniteList.put(ObjectHandler.burningCoal, new ArrayList<Integer>());
 	}
 }

@@ -1,5 +1,6 @@
 package enviromine.items;
 
+import enviromine.handlers.EnviroAchievements;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemFood;
@@ -12,6 +13,14 @@ public class RottenFood extends ItemFood
 	{
 		super(par2, 0.1F, false);
 	}
+	
+	@Override
+    protected void onFoodEaten(ItemStack stack, World world, EntityPlayer player)
+    {
+        super.onFoodEaten(stack, world, player);
+        
+        player.addStat(EnviroAchievements.tenSecondRule, 1);
+    }
 
     /**
      * Callback for item usage. If the item does something special on right clicking, he will have one of those. Return

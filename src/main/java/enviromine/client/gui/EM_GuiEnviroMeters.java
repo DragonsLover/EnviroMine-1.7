@@ -2,11 +2,9 @@ package enviromine.client.gui;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -14,17 +12,18 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-
+import org.apache.logging.log4j.Level;
 import org.lwjgl.opengl.GL11;
-
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import enviromine.EnviroUtils;
 import enviromine.core.EM_Settings;
+import enviromine.core.EnviroMine;
 import enviromine.handlers.EM_StatusManager;
 import enviromine.handlers.ObjectHandler;
 import enviromine.trackers.EnviroDataTracker;
+import enviromine.world.ClientQuake;
 
 public class EM_GuiEnviroMeters extends Gui
 {
@@ -46,9 +45,6 @@ public class EM_GuiEnviroMeters extends Gui
 	private static int ticktimer = 1;
 	private static boolean blink = false;
 	
-	EntityRenderer preRender = null;
-	RenderCameraShake camShake = null;
-	
 	public static EnviroDataTracker tracker = null;
 	
 	public EM_GuiEnviroMeters(Minecraft mc, IResourceManager resManager)
@@ -61,20 +57,31 @@ public class EM_GuiEnviroMeters extends Gui
 	@SideOnly(Side.CLIENT)
 	public void onGuiRender(RenderGameOverlayEvent.Post event)
 	{
-		if(this.camShake == null)
-		{
-			this.camShake = new RenderCameraShake(this.mc, this.resourceManager);
-		}
-		
-		if(this.mc.entityRenderer != camShake)
-		{
-			this.preRender = this.mc.entityRenderer;
-			this.mc.entityRenderer = camShake;
-		}
-		
 		if(event.type != ElementType.HELMET || event.isCancelable())
 		{
 			return;
+		}
+
+		mc.thePlayer.yOffset = 1.62F;
+		if(ClientQuake.GetQuakeShake(mc.theWorld, mc.thePlayer) > 0)
+		{
+			if(mc.thePlayer == null || mc.thePlayer.isPlayerSleeping() || !mc.thePlayer.onGround || (mc.currentScreen != null && mc.currentScreen.doesGuiPauseGame()))
+			{
+				return;
+			}
+			
+			float shakeMult = ClientQuake.GetQuakeShake(mc.theWorld, mc.thePlayer);
+			
+			double shakeSpeed = 2D * shakeMult;
+			float offsetY = 0.2F * shakeMult;
+			
+			double shake = (int)(mc.theWorld.getTotalWorldTime()%24000L) * shakeSpeed;
+			
+			mc.thePlayer.yOffset -= (Math.sin(shake) * (offsetY/2F)) + (offsetY/2F);
+			mc.thePlayer.cameraPitch = (float)(Math.sin(shake) * offsetY/4F);
+			mc.thePlayer.cameraYaw = (float)(Math.sin(shake) * offsetY/4F);
+			
+			//super.updateCameraAndRender(partialTick);
 		}
 		
 		// count gui ticks
@@ -105,13 +112,16 @@ public class EM_GuiEnviroMeters extends Gui
 		int scaledheight = scaleRes.getScaledHeight();
 		
 		// Rend Mask Overlays
-		RenderOverlays(scaledwidth, scaledheight);
+		if(UI_Settings.overlay)
+		{
+			RenderOverlays(scaledwidth, scaledheight);
+		}
 		
 		// GUI Scaling Code 
 		GL11.glPushMatrix(); // Isolate this GUI from the vanilla GUI
 		float scale = UI_Settings.guiScale;
 		
-		double translate = new BigDecimal(String.valueOf(1 / scale)).setScale(3, RoundingMode.HALF_UP).doubleValue();
+		double translate = new BigDecimal(String.valueOf(1F / scale)).setScale(3, RoundingMode.HALF_UP).doubleValue();
 		
 		GL11.glScalef((float)scale, (float)scale, (float)scale);
 		
@@ -127,7 +137,7 @@ public class EM_GuiEnviroMeters extends Gui
 		
 		if(tracker != null && (tracker.trackedEntity == null || tracker.trackedEntity.isDead || tracker.trackedEntity.getHealth() <= 0F) && !tracker.isDisabled)
 		{
-			EntityPlayer player = EM_StatusManager.findPlayer(this.mc.thePlayer.getUniqueID());
+			EntityPlayer player = EM_StatusManager.findPlayer(this.mc.thePlayer.getCommandSenderName());
 			
 			if(player != null)
 			{
@@ -142,14 +152,26 @@ public class EM_GuiEnviroMeters extends Gui
 			}
 		}
 		
+		if(EM_Settings.enableAirQ == false && EM_Settings.enableBodyTemp == false && EM_Settings.enableHydrate == false && EM_Settings.enableSanity == false)
+		{
+			
+		} else if(ticktimer == 1)
+		{
+			tracker = EM_StatusManager.lookupTrackerFromUsername(Minecraft.getMinecraft().thePlayer.getCommandSenderName());
+			if(tracker == null)
+			{
+				EnviroMine.logger.log(Level.ERROR, "Failed to get EnviroTracker for GUI!");
+			}
+		}
+		
 		if(tracker == null)
 		{
+			Minecraft.getMinecraft().fontRenderer.drawStringWithShadow("NO ENVIRONMENT DATA", xPos, (height - yPos) - 8, 16777215);
 			if(!(EM_Settings.enableAirQ == false && EM_Settings.enableBodyTemp == false && EM_Settings.enableHydrate == false && EM_Settings.enableSanity == false))
 			{
-				Minecraft.getMinecraft().fontRenderer.drawStringWithShadow("NO ENVIRONMENT DATA", xPos, (height - yPos) - 8, 16777215);
 				tracker = EM_StatusManager.lookupTrackerFromUsername(this.mc.thePlayer.getCommandSenderName());
 			}
-		} else if(tracker.isDisabled || !EM_StatusManager.trackerList.containsValue(tracker))
+		} else if(tracker.isDisabled || !EM_StatusManager.trackerList.containsValue(tracker) || (EM_Settings.enableAirQ == false && EM_Settings.enableBodyTemp == false && EM_Settings.enableHydrate == false && EM_Settings.enableSanity == false))
 		{
 			tracker = null;
 		} else
@@ -614,6 +636,10 @@ public class EM_GuiEnviroMeters extends Gui
 	public static String DB_physTimer = "";
 	public static int DB_physUpdates = 0;
 	public static int DB_physBuffer = 0;
+	public static String DB_gasTimer = "";
+	public static int DB_gasUpdates = 0;
+	public static int DB_gasBuffer = 0;
+	public static int DB_gasfireBuffer = 0;
 	
 	public static String DB_biomeName = "";
 	public static int DB_biomeID = 0;
@@ -658,7 +684,7 @@ public class EM_GuiEnviroMeters extends Gui
 			Minecraft.getMinecraft().fontRenderer.drawString("Air Quality Rate: " + DB_airquality + "%", 10, 10 * 5, 16777215);
 			Minecraft.getMinecraft().fontRenderer.drawString("Dehydration Rate: " + DB_dehydrateRate + "%", 10, 10 * 6, 16777215);
 			Minecraft.getMinecraft().fontRenderer.drawString("Status Update Speed: " + DB_timer, 10, 10 * 8, 16777215);
-			Minecraft.getMinecraft().fontRenderer.drawString("The Thing: " + tracker.trackedEntity.getEntityData().getInteger("EM_THING"), 10, 10 * 12, 16777215);
+			//Minecraft.getMinecraft().fontRenderer.drawString("The Thing: " + tracker.trackedEntity.getEntityData().getInteger("EM_THING"), 10, 10 * 12, 16777215);
 		} catch(NullPointerException e)
 		{
 			
@@ -670,6 +696,11 @@ public class EM_GuiEnviroMeters extends Gui
 			Minecraft.getMinecraft().fontRenderer.drawString("No. Physics Updates: " + DB_physUpdates, 10, 10 * 10, 16777215);
 			Minecraft.getMinecraft().fontRenderer.drawString("No. Buffered Updates: " + DB_physBuffer, 10, 10 * 11, 16777215);
 		}
+		
+		Minecraft.getMinecraft().fontRenderer.drawString("Gas Update Speed: " + DB_gasTimer, 10, 10 * 12, 16777215);
+		Minecraft.getMinecraft().fontRenderer.drawString("No. Gas Updates: " + DB_gasUpdates, 10, 10 * 13, 16777215);
+		Minecraft.getMinecraft().fontRenderer.drawString("No. Buffered Normal Gas Updates: " + DB_gasBuffer, 10, 10 * 14, 16777215);
+		Minecraft.getMinecraft().fontRenderer.drawString("No. Buffered Burning Gas Updates: " + DB_gasfireBuffer, 10, 10 * 15, 16777215);
 	}
 	
 	public void RenderOverlays(int width, int height)

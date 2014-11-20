@@ -1,4 +1,4 @@
-package enviromine.Utils;
+package enviromine.utils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;

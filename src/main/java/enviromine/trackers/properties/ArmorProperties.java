@@ -1,20 +1,21 @@
 package enviromine.trackers.properties;
 
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
-import net.minecraftforge.common.config.Configuration;
-
-import enviromine.EnviroUtils;
-import enviromine.core.EM_ConfigHandler;
-import enviromine.core.EM_Settings;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
+import net.minecraftforge.common.config.Configuration;
+import enviromine.EnviroUtils;
+import enviromine.core.EM_ConfigHandler;
+import enviromine.core.EM_Settings;
+import enviromine.utils.ModIdentification;
+
 public class ArmorProperties
 {
+	public final Item item;
 	public String name;
 	public float nightTemp;
 	public float shadeTemp;
@@ -31,8 +32,9 @@ public class ArmorProperties
 	
 	public static String categoryName = "armor";
 	
-	public ArmorProperties(String name, float nightTemp, float shadeTemp, float sunTemp, float nightMult, float shadeMult, float sunMult, float sanity, float air, boolean allowCamelPack)
+	public ArmorProperties(Item item, String name, float nightTemp, float shadeTemp, float sunTemp, float nightMult, float shadeMult, float sunMult, float sanity, float air, boolean allowCamelPack)
 	{
+		this.item = item;
 		this.name = name;
 		this.nightTemp = nightTemp;
 		this.shadeTemp = shadeTemp;
@@ -75,14 +77,15 @@ public class ArmorProperties
 		float sanity = (float)config.get(catagory, APName[7], 0.00).getDouble(0.00);
 		float air = (float)config.get(catagory, APName[8], 0.00).getDouble(0.00);
 		
-		Object tmp = Item.itemRegistry.getObject(name);
+		Object item = Item.itemRegistry.getObject(name);
 		boolean allowCamelPack = true;
-		if (tmp instanceof ItemArmor && ((ItemArmor)tmp).armorType == 1) {
+		if (item instanceof ItemArmor && ((ItemArmor)item).armorType == 1) {
 			allowCamelPack = config.get(catagory, APName[9], true).getBoolean(true);
 		}
 		
-		ArmorProperties entry = new ArmorProperties(name, nightTemp, shadeTemp, sunTemp, nightMult, shadeMult, sunMult, sanity, air, allowCamelPack);
+		ArmorProperties entry = new ArmorProperties((Item)item, name, nightTemp, shadeTemp, sunTemp, nightMult, shadeMult, sunMult, sanity, air, allowCamelPack);
 		EM_Settings.armorProperties.put(name, entry);
+		
 	}
 	
 	public static void SaveProperty(Configuration config, String catName, String name, double nightTemp, double shadeTemp, double sunTemp, double nightMult, double shadeMult, double sunMult, double sanity, double air)
@@ -134,14 +137,17 @@ public class ArmorProperties
 		while(itemList.hasNext())
 		{
 			theitem = (Item) itemList.next();
-			String[] Names = SplitObjectName(Item.itemRegistry.getNameForObject(theitem));
+			//String[] Names = SplitObjectName(Item.itemRegistry.getNameForObject(theitem));
+			String modname  = ModIdentification.nameFromObject((Object) theitem);
 			
-			if(!Names[0].equalsIgnoreCase("minecraft")) // Ignore Minecraft Items
+			//if(!Names[0].equalsIgnoreCase("minecraft")) // Ignore Minecraft Items
+			if(modname.trim() != "Minecraft")
 			{
 				if(theitem instanceof ItemArmor)
 				{
 					
-					DetectedArmorGen((ItemArmor)theitem, Names[0]);
+					//DetectedArmorGen((ItemArmor)theitem, Names[0]);
+					DetectedArmorGen((ItemArmor)theitem, modname);
 					//armorCount += 1;
 				}
 			}
@@ -154,13 +160,9 @@ public class ArmorProperties
 	
 
 	private static void DetectedArmorGen(ItemArmor armor, String ModID)
-	{		//TODO REMOVE AFTER TESTING
-			//		File armorFile = new File(customPath + armor.getClass().getSimpleName() + ".cfg");
+	{
 		
-		String[] classpath = armor.getClass().getCanonicalName().toString().split("\\.");
-		
-		
-		File armorFile = new File(EM_ConfigHandler.customPath + classpath[0] + ".cfg");
+		File armorFile = new File(EM_ConfigHandler.customPath + ModID + ".cfg");
 		if(!armorFile.exists())
 		{
 			try

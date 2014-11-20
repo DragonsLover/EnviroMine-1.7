@@ -13,7 +13,6 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 
 import enviromine.core.EM_Settings;
-import enviromine.handlers.ObjectHandler;
 
 public class CamelPackIntegrationHandler implements IRecipe
 {
@@ -28,6 +27,7 @@ public class CamelPackIntegrationHandler implements IRecipe
 		{
 			return false;
 		}
+		
 		boolean hasPack = false;
 		boolean hasArmor = false;
 		
@@ -41,7 +41,7 @@ public class CamelPackIntegrationHandler implements IRecipe
 			if (item == null)
 			{
 				continue;
-			} else if (item.getItem() == ObjectHandler.camelPack)
+			} else if (item.hasTagCompound() && item.stackTagCompound.hasKey("isCamelPack"))
 			{
 				if (hasPack || isRemove)
 				{
@@ -96,13 +96,17 @@ public class CamelPackIntegrationHandler implements IRecipe
 		{
 			if (isRemove)
 			{
-				ItemStack out = new ItemStack(ObjectHandler.camelPack);
-				// OLD out.setItemDamage(100 - armor.getTagCompound().getInteger("camelPackFill"));
-				out.setTagCompound(new NBTTagCompound());
-				out.getTagCompound().setInteger("camelPackFill", armor.getTagCompound().getInteger("camelPackFill"));
-				out.getTagCompound().setInteger("camelPackMax", armor.getTagCompound().getInteger("camelPackMax"));
-				
-				return out;
+				Object obj = Item.itemRegistry.getObject(armor.getTagCompound().getString("packName"));
+				if (obj instanceof Item) {
+					ItemStack out = new ItemStack((Item)obj);
+					
+					out.setTagCompound(new NBTTagCompound());
+					out.getTagCompound().setInteger("camelPackFill", armor.getTagCompound().getInteger("camelPackFill"));
+					out.getTagCompound().setInteger("camelPackMax", armor.getTagCompound().getInteger("camelPackMax"));
+					out.getTagCompound().setBoolean("isCamelPack", true);
+					
+					return out;
+				}
 			} else
 			{
 				if (!armor.hasTagCompound())
@@ -112,7 +116,8 @@ public class CamelPackIntegrationHandler implements IRecipe
 				
 				armor.getTagCompound().setInteger("camelPackFill", pack.getTagCompound().getInteger("camelPackFill"));
 				armor.getTagCompound().setInteger("camelPackMax", pack.getTagCompound().getInteger("camelPackMax"));
-
+				armor.getTagCompound().setString("packName", Item.itemRegistry.getNameForObject(pack.getItem()));
+				
 				return armor;
 			}
 		}
@@ -136,29 +141,26 @@ public class CamelPackIntegrationHandler implements IRecipe
 	public void onCrafting(PlayerEvent.ItemCraftedEvent event)
 	{
 		IInventory craftMatrix = event.craftMatrix;
-		if (!(craftMatrix instanceof InventoryCrafting)) {
+		if (!(craftMatrix instanceof InventoryCrafting) || !craftMatrix.getInventoryName().equals("container.crafting")) {
 			return;
 		}
 		
-		this.matches((InventoryCrafting)craftMatrix, event.player.worldObj);
-		
-		if (!craftMatrix.getInventoryName().equals("container.crafting") || !isRemove)
-		{
-			return;
-		} else
-		{
-			for (int i = craftMatrix.getSizeInventory() - 1; i >= 0; i--)
-			{
-				ItemStack slot = craftMatrix.getStackInSlot(i);
-				
-				if (slot == null)
+		if (this.matches((InventoryCrafting)craftMatrix, event.player.worldObj)) {
+			if (isRemove) {
+				for (int i = craftMatrix.getSizeInventory() - 1; i >= 0; i--)
 				{
-					continue;
-				} else if (slot.hasTagCompound() && slot.getTagCompound().hasKey("camelPackFill"))
-				{
-					slot.stackSize++;
-					slot.getTagCompound().removeTag("camelPackFill");
-					slot.getTagCompound().removeTag("camelPackMax");
+					ItemStack slot = craftMatrix.getStackInSlot(i);
+					
+					if (slot == null)
+					{
+						continue;
+					} else if (slot.hasTagCompound() && slot.getTagCompound().hasKey("camelPackFill"))
+					{
+						slot.stackSize++;
+						slot.getTagCompound().removeTag("camelPackFill");
+						slot.getTagCompound().removeTag("camelPackMax");
+						slot.getTagCompound().removeTag("packName");
+					}
 				}
 			}
 		}

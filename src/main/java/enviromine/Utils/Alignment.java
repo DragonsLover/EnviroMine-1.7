@@ -1,4 +1,4 @@
-package enviromine.Utils;
+package enviromine.utils;
 
 import enviromine.client.hud.HUDRegistry;
 

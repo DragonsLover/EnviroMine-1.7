@@ -3,8 +3,6 @@ package enviromine.handlers;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.BlockLeavesBase;
@@ -36,15 +34,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.EnumPlantType;
-
 import com.google.common.base.Stopwatch;
-
-import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.common.registry.EntityRegistry;
-
 import enviromine.EnviroPotion;
 import enviromine.EnviroUtils;
 import enviromine.client.gui.EM_GuiEnviroMeters;
+import enviromine.client.gui.UI_Settings;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.network.packet.PacketEnviroMine;
@@ -64,7 +60,7 @@ public class EM_StatusManager
 	{
 		if(tracker.trackedEntity instanceof EntityPlayer)
 		{
-			trackerList.put("" + tracker.trackedEntity.getUniqueID().toString(), tracker);
+			trackerList.put("" + tracker.trackedEntity.getCommandSenderName(), tracker);
 		} else
 		{
 			trackerList.put("" + tracker.trackedEntity.getEntityId(), tracker);
@@ -101,26 +97,42 @@ public class EM_StatusManager
 	
 	public static void syncMultiplayerTracker(EnviroDataTracker tracker)
 	{
-		String dataString = "";
+		if(!(tracker.trackedEntity instanceof EntityPlayer))
+		{
+			return;
+		}
+		
+		// String packets Depreciated!
+		/*String dataString = "";
+		
 		if(tracker.trackedEntity instanceof EntityPlayer)
 		{
-			dataString = ("ID:0," + tracker.trackedEntity.getUniqueID().toString() + "," + tracker.airQuality + "," + tracker.bodyTemp + "," + tracker.hydration + "," + tracker.sanity + "," + tracker.airTemp);
+			dataString = ("ID:0," + tracker.trackedEntity.getCommandSenderName() + "," + tracker.airQuality + "," + tracker.bodyTemp + "," + tracker.hydration + "," + tracker.sanity + "," + tracker.airTemp);
 		} else
 		{
 			return;
 			//dataString = ("ID:0," + tracker.trackedEntity.entityId + "," + tracker.airQuality + "," + tracker.bodyTemp + "," + tracker.hydration + "," + tracker.sanity);
-		}
+		}*/
+		tracker.fixFloatinfPointErrors(); // Shortens data as much as possible before sending
+		NBTTagCompound pData = new NBTTagCompound();
+		pData.setInteger("id", 0);
+		pData.setString("player", tracker.trackedEntity.getCommandSenderName());
+		pData.setFloat("airQuality", tracker.airQuality);
+		pData.setFloat("bodyTemp", tracker.bodyTemp);
+		pData.setFloat("hydration", tracker.hydration);
+		pData.setFloat("sanity", tracker.sanity);
+		pData.setFloat("airTemp", tracker.airTemp);
 		
-		EnviroMine.instance.network.sendToAll(new PacketEnviroMine(dataString));
+		EnviroMine.instance.network.sendToAllAround(new PacketEnviroMine(pData), new TargetPoint(tracker.trackedEntity.worldObj.provider.dimensionId, tracker.trackedEntity.posX, tracker.trackedEntity.posY, tracker.trackedEntity.posZ, 128D));
 	}
 	
 	public static EnviroDataTracker lookupTracker(EntityLivingBase entity)
 	{
 		if(entity instanceof EntityPlayer)
 		{
-			if(trackerList.containsKey("" + entity.getUniqueID().toString()))
+			if(trackerList.containsKey("" + entity.getCommandSenderName()))
 			{
-				return trackerList.get("" + entity.getUniqueID().toString());
+				return trackerList.get("" + entity.getCommandSenderName());
 			} else
 			{
 				return null;
@@ -137,14 +149,9 @@ public class EM_StatusManager
 		}
 	}
 	
-	public static EnviroDataTracker lookupTrackerFromUUID(UUID uuid)
-	{
-		return trackerList.get(uuid.toString());
-	}
-	
 	public static EnviroDataTracker lookupTrackerFromUsername(String username)
 	{
-		EntityLivingBase entity = null;
+		/*EntityLivingBase entity = null;
 		
 		if (FMLCommonHandler.instance().getSide().isClient()) {
 			entity = Minecraft.getMinecraft().theWorld.getPlayerEntityByName(username);
@@ -155,14 +162,21 @@ public class EM_StatusManager
 				if (entity != null) { break; }
 			}
 		}
-		return lookupTracker(entity);
+		return lookupTracker(entity);*/
+		if(trackerList.containsKey(username))
+		{
+			return trackerList.get(username);
+		} else
+		{
+			return null;
+		}
 	}
 	
 	private static Stopwatch timer = Stopwatch.createUnstarted();
 	
 	public static float[] getSurroundingData(EntityLivingBase entityLiving, int range)
 	{
-		if(EnviroMine.proxy.isClient() && entityLiving.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()) && !timer.isRunning())
+		if(EnviroMine.proxy.isClient() && entityLiving.getCommandSenderName().equals(Minecraft.getMinecraft().thePlayer.getCommandSenderName()) && !timer.isRunning())
 		{
 			timer.start();
 		}
@@ -583,7 +597,7 @@ public class EM_StatusManager
 			}
 		}
 		
-		if(entityLiving.posY > 48 && !entityLiving.worldObj.provider.isHellWorld)
+		if(dimensionProp != null && entityLiving.posY > dimensionProp.sealevel * 0.75 && !entityLiving.worldObj.provider.isHellWorld)
 		{
 			quality = 2F;
 		}
@@ -761,10 +775,12 @@ public class EM_StatusManager
 				{
 					if(villager.getProfession() == 2) // Priest
 					{
-						if(sBoost < 1F)
+						if(sBoost < 5F)
 						{
-							sBoost = 1F;
+							sBoost = 5F;
 						}
+						
+						((EntityPlayer)entityLiving).addStat(EnviroAchievements.tradingFavours, 1);
 					} else if(villager.getProfession() == 0 && isDay) // Farmer
 					{
 						if(tracker.hydration < 50F)
@@ -778,6 +794,8 @@ public class EM_StatusManager
 							entityLiving.worldObj.playSoundAtEntity(entityLiving, "random.drink", 1.0F, 1.0F);
 							villager.playSound("mob.villager.yes", 1.0F, 1.0F);
 							villager.getEntityData().setLong("Enviro_Assist_Time", worldTime);
+							
+							((EntityPlayer)entityLiving).addStat(EnviroAchievements.tradingFavours, 1);
 						}
 					} else if(villager.getProfession() == 4 && isDay) // Butcher
 					{
@@ -788,6 +806,8 @@ public class EM_StatusManager
 							entityLiving.worldObj.playSoundAtEntity(entityLiving, "random.burp", 0.5F, entityLiving.worldObj.rand.nextFloat() * 0.1F + 0.9F);
 							villager.playSound("mob.villager.yes", 1.0F, 1.0F);
 							villager.getEntityData().setLong("Enviro_Assist_Time", worldTime);
+							
+							((EntityPlayer)entityLiving).addStat(EnviroAchievements.tradingFavours, 1);
 						}
 					}
 				}
@@ -1242,7 +1262,7 @@ public class EM_StatusManager
 		data[6] = animalHostility;
 		data[7] = sanityRate * (float)EM_Settings.sanityMult;
 		
-		if(EnviroMine.proxy.isClient() && entityLiving.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()) && timer.isRunning())
+		if(EnviroMine.proxy.isClient() && entityLiving.getCommandSenderName().equals(Minecraft.getMinecraft().thePlayer.getCommandSenderName()) && timer.isRunning())
 		{
 			timer.stop();
 			EM_GuiEnviroMeters.DB_timer = timer.toString();
@@ -1267,7 +1287,7 @@ public class EM_StatusManager
 			tracker.isDisabled = true;
 			if(tracker.trackedEntity instanceof EntityPlayer)
 			{
-				trackerList.remove(tracker.trackedEntity.getUniqueID().toString());
+				trackerList.remove(tracker.trackedEntity.getCommandSenderName());
 			} else
 			{
 				trackerList.remove("" + tracker.trackedEntity.getEntityId());
@@ -1287,7 +1307,7 @@ public class EM_StatusManager
 			tags.setFloat("ENVIRO_SAN", tracker.sanity);
 			if(tracker.trackedEntity instanceof EntityPlayer)
 			{
-				trackerList.remove(tracker.trackedEntity.getUniqueID().toString());
+				trackerList.remove(tracker.trackedEntity.getCommandSenderName());
 			} else
 			{
 				trackerList.remove("" + tracker.trackedEntity.getEntityId());
@@ -1350,7 +1370,7 @@ public class EM_StatusManager
 				tracker.isDisabled = true;
 				if(tracker.trackedEntity instanceof EntityPlayer)
 				{
-					trackerList.remove(tracker.trackedEntity.getUniqueID().toString());
+					trackerList.remove(tracker.trackedEntity.getCommandSenderName());
 				} else
 				{
 					trackerList.remove("" + tracker.trackedEntity.getEntityId());
@@ -1378,7 +1398,7 @@ public class EM_StatusManager
 		}
 	}
 	
-	public static EntityPlayer findPlayer(UUID uuid)
+	public static EntityPlayer findPlayer(String username)
 	{
 		World[] worlds = new World[1];
 		
@@ -1402,7 +1422,7 @@ public class EM_StatusManager
 			{
 				continue;
 			}
-			EntityPlayer player = worlds[i].func_152378_a(uuid);
+			EntityPlayer player = worlds[i].getPlayerEntityByName(username);
 			
 			if(player != null)
 			{
@@ -1430,12 +1450,12 @@ public class EM_StatusManager
 		
 		if(tracker != null)
 		{
-			if(tracker.bodyTemp >= 38F)
+			if(tracker.bodyTemp >= 38F && UI_Settings.sweatParticals)
 			{
 				entityLiving.worldObj.spawnParticle("dripWater", entityLiving.posX + rndX, entityLiving.posY + rndY, entityLiving.posZ + rndZ, 0.0D, 0.0D, 0.0D);
 			}
 			
-			if(tracker.trackedEntity.isPotionActive(EnviroPotion.insanity))
+			if(tracker.trackedEntity.isPotionActive(EnviroPotion.insanity) && UI_Settings.insaneParticals)
 			{
 				entityLiving.worldObj.spawnParticle("portal", entityLiving.posX + rndX, entityLiving.posY + rndY, entityLiving.posZ + rndZ, 0.0D, 0.0D, 0.0D);
 			}

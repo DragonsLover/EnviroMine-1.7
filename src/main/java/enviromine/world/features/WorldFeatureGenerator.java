@@ -1,22 +1,23 @@
 package enviromine.world.features;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
+
 import cpw.mods.fml.common.IWorldGenerator;
+
 import enviromine.blocks.tiles.TileEntityGas;
 import enviromine.core.EM_Settings;
 import enviromine.gases.EnviroGasDictionary;
 import enviromine.handlers.ObjectHandler;
+import enviromine.trackers.properties.DimensionProperties;
 import enviromine.world.features.mineshaft.MineshaftBuilder;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 public class WorldFeatureGenerator implements IWorldGenerator
 {
@@ -35,7 +36,16 @@ public class WorldFeatureGenerator implements IWorldGenerator
 			return;
 		}
 		
-		if(EM_Settings.oldMineGen)
+		DimensionProperties dimensionProp = null;
+		boolean allowMines = EM_Settings.oldMineGen;
+		
+		if(EM_Settings.dimensionProperties.containsKey(world.provider.dimensionId))
+		{ 
+			dimensionProp = EM_Settings.dimensionProperties.get(world.provider.dimensionId);
+			allowMines = dimensionProp.mineshaftGen;
+		}
+		
+		if(allowMines)
 		{
 			if(!disableMineScan)
 			{
@@ -58,11 +68,32 @@ public class WorldFeatureGenerator implements IWorldGenerator
 			}
 		}
 		
+		ReplaceCoal(random, chunkX, chunkZ, world, chunkGenerator, chunkProvider);
+		
 		if(EM_Settings.gasGen)
 		{
-			for(int i = 25; i >= 0; i--)
+			for(int i = 8; i >= 0; i--)
 			{
 				GenGasPocket(random, chunkX, chunkZ, world, chunkGenerator, chunkProvider);
+			}
+		}
+	}
+	
+	public void ReplaceCoal(Random random, int chunkX, int chunkZ, World world, IChunkProvider chunkGenerator, IChunkProvider chunkProvider)
+	{
+		DimensionProperties dProps = EM_Settings.dimensionProperties.get(world.provider.dimensionId);
+		
+		for(int i = 0; i < 16; i++)
+		{
+			for(int j = 0; j < (dProps != null? (float)dProps.sealevel : 64F) * 0.75F; j++)
+			{
+				for(int k = 0; k < 16; k++)
+				{
+					if(world.getBlock(i, j, k) == Blocks.coal_ore)
+					{
+						world.setBlock(i, j, k, ObjectHandler.flammableCoal);
+					}
+				}
 			}
 		}
 	}
@@ -78,14 +109,12 @@ public class WorldFeatureGenerator implements IWorldGenerator
 			rY -= 1;
 		}
 		
-		ArrayList<Type> bTypes = new ArrayList<Type>(Arrays.asList(BiomeDictionary.getTypesForBiome(world.getBiomeGenForCoords(rX, rZ))));
-		
 		if(world.getBlock(rX, rY, rZ) == Blocks.air)
 		{
 			Block bBlock = world.getBlock(rX, rY - 1, rZ);
 			if(rY < 16 && rY > 0)
 			{
-				if(bBlock.getMaterial() == Material.water && (bTypes.contains(Type.SWAMP) || bTypes.contains(Type.JUNGLE)))
+				if(bBlock.getMaterial() == Material.water)
 				{
 					world.setBlock(rX, rY, rZ, ObjectHandler.gasBlock, 0, 2);
 					TileEntity tile = world.getTileEntity(rX, rY, rZ);
@@ -96,9 +125,6 @@ public class WorldFeatureGenerator implements IWorldGenerator
 						gasTile.addGas(EnviroGasDictionary.hydrogenSulfide.gasID, 10);
 						//EnviroMine.logger.log(Level.INFO, "Generating hydrogen sulfide at (" + rX + "," + rY + "," + rZ + ")");
 					}
-				} else if(bBlock.getMaterial() == Material.water)
-				{
-					return;
 				} else if(bBlock.getMaterial() == Material.lava || bBlock.getMaterial() == Material.fire)
 				{
 					world.setBlock(rX, rY, rZ, ObjectHandler.gasBlock, 0, 2);

@@ -10,10 +10,10 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import enviromine.core.EM_Settings;
 
 public class TeleportHandler extends Teleporter
 {
@@ -49,8 +49,8 @@ public class TeleportHandler extends Teleporter
 			if(par1Entity instanceof EntityPlayer)
 			{
 				EntityPlayer player = (EntityPlayer)par1Entity;
-				ItemStack itemTop = new ItemStack(ObjectHandler.elevatorTop, 1);
-				ItemStack itemBot = new ItemStack(ObjectHandler.elevatorBottom, 1);
+				ItemStack itemTop = new ItemStack(ObjectHandler.elevator, 1, 0);
+				ItemStack itemBot = new ItemStack(ObjectHandler.elevator, 1, 1);
 				if(!player.inventory.addItemStackToInventory(itemTop))
 				{
 					EntityItem entityitem = new EntityItem(this.worldServerInstance, player.posX, player.posY, player.posZ, itemTop);
@@ -71,7 +71,7 @@ public class TeleportHandler extends Teleporter
 	@Override
 	public boolean placeInExistingPortal(Entity par1Entity, double par2, double par4, double par6, float par8)
 	{
-		short short1 = 0;
+		short short1 = 1;
 		double d3 = -1.0D;
 		int i = 0;
 		int j = 0;
@@ -107,10 +107,10 @@ public class TeleportHandler extends Teleporter
 					
 					for (int i2 = 127 - 1; i2 >= 0; --i2)
 					{
-						if (this.worldServerInstance.getBlock(k1, i2, l1) == ObjectHandler.elevatorBottom && this.worldServerInstance.getBlock(k1, i2 + 1, l1) == ObjectHandler.elevatorTop)
+						if (this.worldServerInstance.getBlock(k1, i2, l1) == ObjectHandler.elevator && this.worldServerInstance.getBlockMetadata(k1, i2, l1) == 1 && this.worldServerInstance.getBlock(k1, i2 + 1, l1) == ObjectHandler.elevator && this.worldServerInstance.getBlockMetadata(k1, i2 + 1, l1) == 0)
 						{
 							breakLoop = true;
-							while (this.worldServerInstance.getBlock(k1, i2 - 1, l1) == ObjectHandler.elevatorBottom || this.worldServerInstance.getBlock(k1, i2 - 1, l1) == ObjectHandler.elevatorTop)
+							while (this.worldServerInstance.getBlock(k1, i2 - 1, l1) == ObjectHandler.elevator)
 							{
 								--i2;
 							}
@@ -159,7 +159,7 @@ public class TeleportHandler extends Teleporter
 			d4 = (double)k + 0.5D;
 			
 			par1Entity.motionX = par1Entity.motionY = par1Entity.motionZ = 0.0D;
-			par1Entity.setLocationAndAngles(d8, d9, d4, par1Entity.rotationYaw, par1Entity.rotationPitch);
+			par1Entity.setLocationAndAngles(d8, d9 + 0.1D, d4, par1Entity.rotationYaw, par1Entity.rotationPitch);
 			return true;
 		}
 		else
@@ -171,12 +171,12 @@ public class TeleportHandler extends Teleporter
 	@Override
 	public boolean makePortal(Entity par1Entity)
 	{
-		int i = MathHelper.floor_double(par1Entity.posX);
+		int i = (int)(MathHelper.floor_double(par1Entity.posX) + Math.signum(par1Entity.posX < 0? par1Entity.posX : 0));
 		int j = 5;//MathHelper.floor_double(par1Entity.posY);
-		int k = MathHelper.floor_double(par1Entity.posZ);
+		int k = (int)(MathHelper.floor_double(par1Entity.posZ) + Math.signum(par1Entity.posZ < 0? par1Entity.posZ : 0));
 		boolean clearSpace = false;
 		
-		if(this.worldServerInstance.provider.dimensionId == -3)
+		if(this.worldServerInstance.provider.dimensionId == EM_Settings.caveDimID)
 		{
 			for(int checkH = 120; checkH >= 32; checkH--)
 			{
@@ -222,17 +222,17 @@ public class TeleportHandler extends Teleporter
 					{
 						if(y == j - 1)
 						{
-							if(!this.worldServerInstance.getBlock(x, y, z).isNormalCube());
+							if(!this.worldServerInstance.getBlock(x, y, z).isOpaqueCube());
 							{
-								this.worldServerInstance.setBlock(x, y, z, Blocks.planks);
+								this.worldServerInstance.setBlock(x, y, z, Blocks.cobblestone);
 								
 								if(x != i && z != k)
 								{
 									int supY = y - 1;
 									
-									while(!this.worldServerInstance.getBlock(x, supY, z).isNormalCube() && supY >= 0)
+									while(!this.worldServerInstance.getBlock(x, supY, z).isOpaqueCube() && supY >= 0)
 									{
-										this.worldServerInstance.setBlock(x, supY, z, Blocks.fence);
+										this.worldServerInstance.setBlock(x, supY, z, Blocks.cobblestone_wall);
 										supY -= 1;
 									}
 								}
@@ -246,8 +246,8 @@ public class TeleportHandler extends Teleporter
 			}
 		}
 		
-		this.worldServerInstance.setBlock(i, j + 1, k, ObjectHandler.elevatorTop);
-		this.worldServerInstance.setBlock(i, j, k, ObjectHandler.elevatorBottom);
+		this.worldServerInstance.setBlock(i, j + 1, k, ObjectHandler.elevator, 0, 2);
+		this.worldServerInstance.setBlock(i, j, k, ObjectHandler.elevator, 1, 2);
 		
 		return true;
 	}

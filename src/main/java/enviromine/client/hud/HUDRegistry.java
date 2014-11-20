@@ -10,7 +10,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import enviromine.Utils.Alignment;
+import enviromine.utils.Alignment;
 
 /**
  * 

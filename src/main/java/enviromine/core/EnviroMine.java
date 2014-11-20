@@ -26,8 +26,6 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.VillagerRegistry;
 import cpw.mods.fml.relauncher.Side;
-
-import enviromine.EM_VillageMineshaft;
 import enviromine.EnviroPotion;
 import enviromine.EnviroUtils;
 import enviromine.core.commands.CommandPhysics;
@@ -42,9 +40,11 @@ import enviromine.network.packet.PacketServerOverride;
 import enviromine.trackers.properties.ArmorProperties;
 import enviromine.trackers.properties.BiomeProperties;
 import enviromine.trackers.properties.DimensionProperties;
+import enviromine.utils.ModIdentification;
 import enviromine.world.WorldProviderCaves;
 import enviromine.world.biomes.BiomeGenCaves;
 import enviromine.world.features.WorldFeatureGenerator;
+import enviromine.world.features.mineshaft.EM_VillageMineshaft;
 
 @Mod(modid = EM_Settings.ModID, name = EM_Settings.Name, version = EM_Settings.Version)
 public class EnviroMine
@@ -107,6 +107,8 @@ public class EnviroMine
 		
 		EnviroAchievements.InitAchievements();
 		
+		ModIdentification.init();
+		
 		caves = (new BiomeGenCaves(23)).setColor(16711680).setBiomeName("Caves").setDisableRain().setTemperatureRainfall(1.0F, 0.0F);
 		//GameRegistry.addBiome(caves); TODO
 		BiomeDictionary.registerBiomeType(caves, Type.WASTELAND);
@@ -130,6 +132,7 @@ public class EnviroMine
 			ArmorProperties.SearchForModdedArmors();
 		}
 		
+		ObjectHandler.LoadIgnitionSources();
 		DimensionProperties.SearchForDimensions();
 		BiomeProperties.SearchForBiomes();
 		

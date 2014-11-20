@@ -1,9 +1,11 @@
 package enviromine.client.hud;
 
-import enviromine.Utils.Alignment;
-import enviromine.client.gui.UI_Settings;
-import net.minecraft.client.gui.GuiScreen;
+import javax.annotation.Resource;
+
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+import enviromine.client.gui.UI_Settings;
+import enviromine.utils.Alignment;
 
 /**
  * 
@@ -21,7 +23,7 @@ public abstract class HudItem {
     public boolean rotated = false;
     
     public boolean blink = false;
-    public int blinkTick = 0;
+    public static int blinkTick = 0;
     
 
     public HudItem() 
@@ -63,6 +65,8 @@ public abstract class HudItem {
     public abstract int getWidth();
 
     public abstract int getHeight();
+    
+    public abstract ResourceLocation BindResource();
 
 	/**
 	 * Used to check if Frame is blinking
@@ -160,9 +164,6 @@ public abstract class HudItem {
 		{
 			blink = !blink;
 			blinkTick = 1;
-		} else
-		{
-			blinkTick++;
 		}
 		
 		return blink;

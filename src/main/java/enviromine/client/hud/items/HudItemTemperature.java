@@ -3,20 +3,18 @@ package enviromine.client.hud.items;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
-import enviromine.EnviroUtils;
-import enviromine.Utils.Alignment;
-import enviromine.Utils.RenderAssist;
+
+import org.lwjgl.opengl.GL11;
+
 import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
-import enviromine.core.EM_Settings;
+import enviromine.utils.Alignment;
+import enviromine.utils.RenderAssist;
 
 public class HudItemTemperature extends HudItem {
 
@@ -47,7 +45,7 @@ public class HudItemTemperature extends HudItem {
 
 	@Override
 	public int getWidth() {
-		return 64;
+		return UI_Settings.minimalHud ? 0 : 64;
 	}
 
 	@Override
@@ -77,7 +75,7 @@ public class HudItemTemperature extends HudItem {
 	@Override
 	public void render()
 	{
-
+		GL11.glPushMatrix();
 		
         
 		int heatBar = MathHelper.ceiling_float_int(((Gui_EventManager.tracker.bodyTemp + 50) / 150) * this.getWidth());
@@ -160,7 +158,13 @@ public class HudItemTemperature extends HudItem {
 				}
 		}
 
+		GL11.glPopMatrix();
+	}
 
+	@Override
+	public ResourceLocation BindResource() {
+		// TODO Auto-generated method stub
+		return Gui_EventManager.guiResource;
 	}
 
 }
