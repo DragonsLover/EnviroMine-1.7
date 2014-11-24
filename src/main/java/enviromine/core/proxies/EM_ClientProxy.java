@@ -24,7 +24,9 @@ import enviromine.blocks.tiles.TileEntityFreezer;
 import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.SaveController;
 import enviromine.client.hud.HUDRegistry;
+import enviromine.client.hud.items.HudItemAirQuality;
 import enviromine.client.hud.items.HudItemHydration;
+import enviromine.client.hud.items.HudItemSanity;
 import enviromine.client.hud.items.HudItemTemperature;
 import enviromine.client.renderer.itemInventory.ArmoredCamelPackRenderer;
 import enviromine.client.renderer.tileentity.RenderGasHandler;
@@ -135,6 +137,8 @@ public class EM_ClientProxy extends EM_CommonProxy
 	{
         HUDRegistry.registerHudItem(new HudItemTemperature());
         HUDRegistry.registerHudItem(new HudItemHydration());
+        HUDRegistry.registerHudItem(new HudItemSanity());
+        HUDRegistry.registerHudItem(new HudItemAirQuality());
         HUDRegistry.setInitialLoadComplete(true);
 	}
 	

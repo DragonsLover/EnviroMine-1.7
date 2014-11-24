@@ -1,10 +1,12 @@
 package enviromine.client.hud.items;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
+
+import org.lwjgl.opengl.GL11;
+
 import enviromine.EnviroUtils;
 import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
@@ -15,30 +17,30 @@ import enviromine.client.hud.OverlayHandler.Overlay;
 import enviromine.utils.Alignment;
 import enviromine.utils.RenderAssist;
 
-public class HudItemHydration extends HudItem	{
+public class HudItemAirQuality extends HudItem	{
 
 	@Override
 	public String getName() {
 
-		return "Hydration";
+		return "Air Quality";
 	}
 
 	@Override
 	public String getButtonLabel() {
 
-		return "Hydration Bar";
+		return "Air Quality Bar";
 	}
 
 	@Override
 	public Alignment getDefaultAlignment() {
 
-		return Alignment.BOTTOMLEFT;
+		return Alignment.BOTTOMRIGHT;
 	}
 
 	@Override
 	public int getDefaultPosX() {
 
-		return 8;
+		return (((HUDRegistry.screenWidth - 4) - getWidth()));
 	}
 
 	@Override
@@ -62,7 +64,7 @@ public class HudItemHydration extends HudItem	{
 	@Override
 	public boolean isBlinking() {
 
-		if(blink() && Gui_EventManager.tracker.hydration < 25)
+		if(blink() && Gui_EventManager.tracker.airQuality < 25)
 		{
 			return true;
 		}
@@ -75,25 +77,25 @@ public class HudItemHydration extends HudItem	{
 	@Override
 	public int getDefaultID() {
 
-		return 1;
+		return 3;
 	}
 
 	@Override
 	public void render() 
 	{
 		GL11.glPushMatrix();	
-		int waterBar = MathHelper.ceiling_float_int((Gui_EventManager.tracker.hydration / 100) * this.getWidth());
-
+		int airBar = MathHelper.ceiling_float_int((Gui_EventManager.tracker.airQuality / 100) * this.getWidth());
+		
 		int frameBorder = 4;
 		if(this.isBlinking())
 			frameBorder = 5;
 		
-		if(waterBar > this.getWidth())
+		if(airBar > this.getWidth())
 		{
-			waterBar = this.getWidth();
-		} else if(waterBar < 0)
+			airBar = this.getWidth();
+		} else if(airBar < 0)
 		{
-			waterBar = 0;
+			airBar = 0;
 		}
 		
 		if(!UI_Settings.minimalHud)
@@ -109,11 +111,11 @@ public class HudItemHydration extends HudItem	{
 			}
 			
 			//Bar
-			RenderAssist.drawTexturedModalRect(posX, posY, 0, 0, getWidth(), getHeight());
-			RenderAssist.drawTexturedModalRect(posX, posY, 64, 0, waterBar, getHeight());
+			RenderAssist.drawTexturedModalRect(posX, posY, 0, 8, getWidth(), getHeight());
+			RenderAssist.drawTexturedModalRect(posX, posY, 64, 8, airBar, getHeight());
 			
 			//render status update
-			RenderAssist.drawTexturedModalRect(posX + waterBar - 2, posY + 2, 16, 64, 4, 4);
+			RenderAssist.drawTexturedModalRect(posX + airBar - 2, posY + 2, 8, 64, 4, 4);
 
 			//Frame
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, getHeight() * frameBorder, getWidth(), getHeight());
@@ -127,7 +129,7 @@ public class HudItemHydration extends HudItem	{
 		{
 			int iconPosX = getIconPosX();
 			// Render Icon
-			RenderAssist.drawTexturedModalRect(iconPosX, posY - 4, 16, 80, 16, 16);
+			RenderAssist.drawTexturedModalRect(iconPosX, posY - 4, 48, 80, 16, 16);
 		}
 		
 		if(UI_Settings.ShowText == true)
@@ -137,34 +139,26 @@ public class HudItemHydration extends HudItem	{
 
 				//Render Text
 				RenderAssist.drawTexturedModalRect(getTextPosX(), posY, 64, getHeight() * 4, 32, getHeight());
-				Minecraft.getMinecraft().fontRenderer.drawString(Gui_EventManager.tracker.hydration + "%", getTextPosX(), posY, 16777215);
+				Minecraft.getMinecraft().fontRenderer.drawString(Gui_EventManager.tracker.airQuality + "%", getTextPosX(), posY, 16777215);
 		}
 		GL11.glPopMatrix();
 	}
-
 	@Override
 	public ResourceLocation BindResource() {
 		// TODO Auto-generated method stub
 		return Gui_EventManager.guiResource;
 	}
-
+	
 	@Override
-	public void renderScreenOverlay(int scaledwidth, int scaledheight) {
-		if(Gui_EventManager.tracker.bodyTemp >= 39)
-		{
-			int grad = 0;
-			if(Gui_EventManager.tracker.bodyTemp >= 41F)
-			{
-				grad = 210;
-			} else
-			{
-				grad = (int)((1F - (Math.abs(3 - (Gui_EventManager.tracker.bodyTemp - 39)) / 3)) * 96);
-			}
-			EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, EnviroUtils.getColorFromRGBA(255, 255, 255, grad));
-			
-		} 
-	}
+	public void renderScreenOverlay(int scaledwidth, int scaledheight)
+	{
 
+		if(Gui_EventManager.tracker.airQuality < 50F)
+		{
+			int grad = (int)((50 - Gui_EventManager.tracker.airQuality) / 15 * 64);
+			EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, EnviroUtils.getColorFromRGBA(32, 96, 0, grad));
+		}
+	}
 
 
 

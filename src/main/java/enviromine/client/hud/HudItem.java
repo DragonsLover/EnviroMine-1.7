@@ -2,9 +2,11 @@ package enviromine.client.hud;
 
 import javax.annotation.Resource;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import enviromine.client.gui.UI_Settings;
+import enviromine.client.hud.OverlayHandler.Overlay;
 import enviromine.utils.Alignment;
 
 /**
@@ -19,12 +21,14 @@ public abstract class HudItem {
     public Alignment alignment;
     public int posX;
     public int posY;
+    public int phase;
     private int id;
     public boolean rotated = false;
     
     public boolean blink = false;
     public static int blinkTick = 0;
     
+	protected OverlayHandler outer = new OverlayHandler();
 
     public HudItem() 
     {
@@ -32,6 +36,9 @@ public abstract class HudItem {
         posX = getDefaultPosX();
         posY = getDefaultPosY();
         id = getDefaultID();
+        phase = 0;
+        
+        //registerOverlay();
     }
 
     /**
@@ -67,7 +74,7 @@ public abstract class HudItem {
     public abstract int getHeight();
     
     public abstract ResourceLocation BindResource();
-
+    
 	/**
 	 * Used to check if Frame is blinking
 	 * @blink
@@ -84,7 +91,9 @@ public abstract class HudItem {
     //public abstract void renderText();
     
     //public abstract void renderIcon();
+
     
+    public abstract void renderScreenOverlay(int scaledwidth, int scaledheight);
     
 	public int getTextFrameWidth()
 	{
@@ -251,4 +260,6 @@ public abstract class HudItem {
     public boolean canRotate() {
         return true;
     }
+
+
 }

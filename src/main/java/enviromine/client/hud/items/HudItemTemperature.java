@@ -9,10 +9,13 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import enviromine.EnviroUtils;
 import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
+import enviromine.client.hud.OverlayHandler;
+import enviromine.client.hud.OverlayHandler.Overlay;
 import enviromine.utils.Alignment;
 import enviromine.utils.RenderAssist;
 
@@ -166,5 +169,24 @@ public class HudItemTemperature extends HudItem {
 		// TODO Auto-generated method stub
 		return Gui_EventManager.guiResource;
 	}
+
+	@Override
+	public void renderScreenOverlay(int scaledwidth, int scaledheight) {
+		
+		if(Gui_EventManager.tracker.bodyTemp <= 35)
+		{
+			int grad = 0;
+			if(Gui_EventManager.tracker.bodyTemp <= 32F)
+			{
+				grad = 210;
+			} else
+			{
+				grad = (int)((Math.abs(3 - (Gui_EventManager.tracker.bodyTemp - 32)))) * 64;
+			}
+			EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, EnviroUtils.getColorFromRGBA(125, 255, 255, grad));
+		}
+	}
+
+
 
 }

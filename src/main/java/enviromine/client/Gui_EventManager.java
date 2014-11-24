@@ -1,5 +1,8 @@
 package enviromine.client;
 
+import java.awt.Color;
+import java.awt.Graphics;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiIngameMenu;
@@ -19,9 +22,12 @@ import org.apache.logging.log4j.Level;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import enviromine.client.gui.UI_Settings;
 import enviromine.client.gui.menu.EM_Gui_Menu;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
+import enviromine.client.hud.OverlayHandler;
+import enviromine.client.hud.OverlayHandler.Overlay;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.handlers.EM_StatusManager;
@@ -84,14 +90,17 @@ public class Gui_EventManager
     private Minecraft mc = Minecraft.getMinecraft();
     
 	public static final ResourceLocation guiResource = new ResourceLocation("enviromine", "textures/gui/status_Gui.png");
+	public static final ResourceLocation blurOverlayResource = new ResourceLocation("enviromine", "textures/misc/blur.png");
+	
 	
 	public static EnviroDataTracker tracker = null;
-    
+    int i=0;
+    boolean up = true;
     @SubscribeEvent
 	@SideOnly(Side.CLIENT)
 	public void onGuiRender(RenderGameOverlayEvent.Post event)
 	{
-	
+
 		if(event.type != ElementType.HELMET || event.isCancelable())
 		{
 
@@ -100,9 +109,7 @@ public class Gui_EventManager
 		
 	 	HUDRegistry.checkForResize();
 
-	 	
 
-	
 		if(tracker != null && (tracker.trackedEntity == null || tracker.trackedEntity.isDead || tracker.trackedEntity.getHealth() <= 0F) && !tracker.isDisabled)
 		{
 			EntityPlayer player = EM_StatusManager.findPlayer(this.mc.thePlayer.getCommandSenderName());
@@ -134,8 +141,12 @@ public class Gui_EventManager
 		else
 		{
 			
+			ScaledResolution scaleRes = new ScaledResolution(Minecraft.getMinecraft(), Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+			int scaledwidth = scaleRes.getScaledWidth();
+			int scaledheight = scaleRes.getScaledHeight();
+			
 		HudItem.blinkTick++;
-		
+	
     	for (HudItem huditem : HUDRegistry.getHudItemList()) 
     	{
     		if (mc.playerController.isInCreativeMode() && !huditem.isRenderedInCreative()) 
@@ -146,6 +157,15 @@ public class Gui_EventManager
     		{
     			if (huditem.shouldDrawOnMount()) 
     			{
+    				//Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
+    				
+    				
+    				if(UI_Settings.overlay) 
+    				{
+    					Minecraft.getMinecraft().renderEngine.bindTexture(Gui_EventManager.blurOverlayResource);
+    					huditem.renderScreenOverlay(scaledheight, scaledheight);
+    				}
+    				
     				Minecraft.getMinecraft().renderEngine.bindTexture(huditem.BindResource());
     				huditem.fixBounds();
     				huditem.render();
@@ -154,6 +174,14 @@ public class Gui_EventManager
     		{
     			if (huditem.shouldDrawAsPlayer()) 
     			{
+    				//Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
+    				
+    				if(UI_Settings.overlay) 
+    				{
+    					Minecraft.getMinecraft().renderEngine.bindTexture(Gui_EventManager.blurOverlayResource);
+        				huditem.renderScreenOverlay(scaledwidth, scaledheight);
+    				}
+    				 				
     				Minecraft.getMinecraft().renderEngine.bindTexture(huditem.BindResource());
     				huditem.fixBounds();
     				huditem.render();
@@ -162,8 +190,11 @@ public class Gui_EventManager
     	}
     	
 		}
+		
+		
+
+    	
 	}
-    
 	
 }
 

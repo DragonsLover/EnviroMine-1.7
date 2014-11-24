@@ -15,36 +15,36 @@ import enviromine.client.hud.OverlayHandler.Overlay;
 import enviromine.utils.Alignment;
 import enviromine.utils.RenderAssist;
 
-public class HudItemHydration extends HudItem	{
+public class HudItemSanity extends HudItem	{
 
 	@Override
 	public String getName() {
 
-		return "Hydration";
+		return "Sanity";
 	}
 
 	@Override
 	public String getButtonLabel() {
 
-		return "Hydration Bar";
+		return "Sanity Bar";
 	}
 
 	@Override
 	public Alignment getDefaultAlignment() {
 
-		return Alignment.BOTTOMLEFT;
+		return Alignment.BOTTOMRIGHT;
 	}
 
 	@Override
 	public int getDefaultPosX() {
 
-		return 8;
+		return (((HUDRegistry.screenWidth - 4) - getWidth()));
 	}
 
 	@Override
 	public int getDefaultPosY() {
 
-		return (HUDRegistry.screenHeight - 15);
+		return (HUDRegistry.screenHeight - 30);
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class HudItemHydration extends HudItem	{
 	@Override
 	public boolean isBlinking() {
 
-		if(blink() && Gui_EventManager.tracker.hydration < 25)
+		if(blink() && Gui_EventManager.tracker.sanity < 25)
 		{
 			return true;
 		}
@@ -75,25 +75,25 @@ public class HudItemHydration extends HudItem	{
 	@Override
 	public int getDefaultID() {
 
-		return 1;
+		return 2;
 	}
 
 	@Override
 	public void render() 
 	{
 		GL11.glPushMatrix();	
-		int waterBar = MathHelper.ceiling_float_int((Gui_EventManager.tracker.hydration / 100) * this.getWidth());
-
+		int sanityBar = MathHelper.ceiling_float_int((Gui_EventManager.tracker.hydration / 100) * this.getWidth());
+		
 		int frameBorder = 4;
 		if(this.isBlinking())
 			frameBorder = 5;
 		
-		if(waterBar > this.getWidth())
+		if(sanityBar > this.getWidth())
 		{
-			waterBar = this.getWidth();
-		} else if(waterBar < 0)
+			sanityBar = this.getWidth();
+		} else if(sanityBar < 0)
 		{
-			waterBar = 0;
+			sanityBar = 0;
 		}
 		
 		if(!UI_Settings.minimalHud)
@@ -109,11 +109,11 @@ public class HudItemHydration extends HudItem	{
 			}
 			
 			//Bar
-			RenderAssist.drawTexturedModalRect(posX, posY, 0, 0, getWidth(), getHeight());
-			RenderAssist.drawTexturedModalRect(posX, posY, 64, 0, waterBar, getHeight());
+			RenderAssist.drawTexturedModalRect(posX, posY, 0, 16, getWidth(), getHeight());
+			RenderAssist.drawTexturedModalRect(posX, posY, 64, 16, sanityBar, getHeight());
 			
 			//render status update
-			RenderAssist.drawTexturedModalRect(posX + waterBar - 2, posY + 2, 16, 64, 4, 4);
+			RenderAssist.drawTexturedModalRect(posX + sanityBar - 2, posY + 2, 28, 64, 4, 4);
 
 			//Frame
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, getHeight() * frameBorder, getWidth(), getHeight());
@@ -127,7 +127,7 @@ public class HudItemHydration extends HudItem	{
 		{
 			int iconPosX = getIconPosX();
 			// Render Icon
-			RenderAssist.drawTexturedModalRect(iconPosX, posY - 4, 16, 80, 16, 16);
+			RenderAssist.drawTexturedModalRect(iconPosX, posY - 4, 32, 80, 16, 16);
 		}
 		
 		if(UI_Settings.ShowText == true)
@@ -137,7 +137,7 @@ public class HudItemHydration extends HudItem	{
 
 				//Render Text
 				RenderAssist.drawTexturedModalRect(getTextPosX(), posY, 64, getHeight() * 4, 32, getHeight());
-				Minecraft.getMinecraft().fontRenderer.drawString(Gui_EventManager.tracker.hydration + "%", getTextPosX(), posY, 16777215);
+				Minecraft.getMinecraft().fontRenderer.drawString(Gui_EventManager.tracker.sanity + "%", getTextPosX(), posY, 16777215);
 		}
 		GL11.glPopMatrix();
 	}
@@ -150,21 +150,13 @@ public class HudItemHydration extends HudItem	{
 
 	@Override
 	public void renderScreenOverlay(int scaledwidth, int scaledheight) {
-		if(Gui_EventManager.tracker.bodyTemp >= 39)
+		
+		if(Gui_EventManager.tracker.sanity < 50F)
 		{
-			int grad = 0;
-			if(Gui_EventManager.tracker.bodyTemp >= 41F)
-			{
-				grad = 210;
-			} else
-			{
-				grad = (int)((1F - (Math.abs(3 - (Gui_EventManager.tracker.bodyTemp - 39)) / 3)) * 96);
-			}
-			EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, EnviroUtils.getColorFromRGBA(255, 255, 255, grad));
-			
-		} 
+			int grad = (int)((50 - Gui_EventManager.tracker.sanity) / 15 * 64);
+			EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, EnviroUtils.getColorFromRGBA(200, 0, 249, grad));
+		}
 	}
-
 
 
 
