@@ -34,14 +34,18 @@ public class OverlayHandler
 			this.amplitude = 111;
 			this.phase = 0;
 			this.intervalPhase = 0;
-			this.interval = 0;
-			this.peakWait = 0;
+			this.interval = 200;
+			this.peakWait = 100;
 			this.peakWaitPhase = 0;
 			this.peakSpeed = 1;
 			this.baseSpeed = 1;
 
 			this.pulse = pulse;
 			this.resource = Gui_EventManager.blurOverlayResource;
+			
+			this.R = 255;
+			this.G = 255;
+			this.B = 255;
 		}
 		
 		public void setRGB(int R, int G, int B)
@@ -51,15 +55,14 @@ public class OverlayHandler
 			this.B = B;
 		}
 		
-		public int getRGBA(Overlay overlay, int alpha)
+		public int getRGBA(int alpha)
 		{
-			return EnviroUtils.getColorFromRGBA(overlay.R, overlay.G, overlay.B , alpha);
+			return EnviroUtils.getColorFromRGBA(this.R, this.G, this.B , alpha);
 		}
 		
-		public void setPulseVar(int amplitude, int phase, int interval, int peakWait, int peakSpeed, int baseSpeed)
+		public void setPulseVar(int amplitude, int interval, int peakWait, int peakSpeed, int baseSpeed)
 		{
-			this.amplitude = amplitude;
-			this.phase = phase;
+			this.amplitude = amplitude > 111 ? 111 : amplitude ;
 			this.interval = interval;
 			this.peakWait = peakWait;
 			this.peakSpeed = peakSpeed;
@@ -118,15 +121,41 @@ public class OverlayHandler
         return null;
     }
 	
+    
+    
 	public int PulseWave(Overlay overlay)
     {
         int alpha;
  
 
-        alpha = (int)( overlay.amplitude - Math.sin( Math.toRadians( overlay.phase) ) *  overlay.amplitude );
-            
-            if(alpha <=  overlay.amplitude)	 overlay.phase += overlay.peakSpeed;
-            else  overlay.phase = 0;
+        alpha = (int)( overlay.amplitude - Math.sin( Math.toRadians(overlay.phase) ) *  overlay.amplitude );
+        alpha = alpha*2;
+
+        if(alpha >= 254) alpha = 254;
+        else if(alpha <= 0) alpha = 0;
+        //Moving up to peak
+        if(overlay.phase <=  overlay.amplitude)	 
+        {
+        	if(overlay.phase >= (overlay.amplitude/2) && overlay.peakWaitPhase <= overlay.peakWait)
+        	{
+        		overlay.peakWaitPhase++;
+        	}
+        	else
+        	{
+        		overlay.phase += overlay.peakSpeed;
+        	}
+        	
+        }
+        else if(overlay.intervalPhase <= overlay.interval)
+        {
+        	overlay.intervalPhase++;
+        }
+        else  
+        {
+        	overlay.phase = 0;
+        	overlay.peakWaitPhase = 0;
+        	overlay.intervalPhase = 0;
+        }
             
             // there's no drawPoint in java so draw a VERY short line
            // Minecraft.getMinecraft().fontRenderer.drawString(phase +" : "+ y, this.getDefaultPosX(), this.getDefaultPosY() -50 , 16777215);

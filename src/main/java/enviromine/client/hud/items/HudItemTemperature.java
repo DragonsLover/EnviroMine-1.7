@@ -165,9 +165,10 @@ public class HudItemTemperature extends HudItem {
 	}
 
 	@Override
-	public ResourceLocation BindResource() {
-		// TODO Auto-generated method stub
-		return Gui_EventManager.guiResource;
+	public ResourceLocation getResource(String type) 
+	{
+		if(type == "TintOverlay") return Gui_EventManager.blurOverlayResource;
+		else return Gui_EventManager.guiResource;
 	}
 
 	@Override

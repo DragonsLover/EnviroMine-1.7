@@ -143,26 +143,17 @@ public class HudItemHydration extends HudItem	{
 	}
 
 	@Override
-	public ResourceLocation BindResource() {
-		// TODO Auto-generated method stub
-		return Gui_EventManager.guiResource;
+	public ResourceLocation getResource(String type) 
+	{
+		if(type == "TintOverlay") return Gui_EventManager.blurOverlayResource;
+		else return Gui_EventManager.guiResource;
+
 	}
 
 	@Override
-	public void renderScreenOverlay(int scaledwidth, int scaledheight) {
-		if(Gui_EventManager.tracker.bodyTemp >= 39)
-		{
-			int grad = 0;
-			if(Gui_EventManager.tracker.bodyTemp >= 41F)
-			{
-				grad = 210;
-			} else
-			{
-				grad = (int)((1F - (Math.abs(3 - (Gui_EventManager.tracker.bodyTemp - 39)) / 3)) * 96);
-			}
-			EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, EnviroUtils.getColorFromRGBA(255, 255, 255, grad));
-			
-		} 
+	public void renderScreenOverlay(int scaledwidth, int scaledheight) 
+	{
+
 	}
 
 

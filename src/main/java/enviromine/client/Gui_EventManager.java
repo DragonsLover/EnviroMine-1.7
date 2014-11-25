@@ -1,8 +1,5 @@
 package enviromine.client;
 
-import java.awt.Color;
-import java.awt.Graphics;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiIngameMenu;
@@ -22,6 +19,8 @@ import org.apache.logging.log4j.Level;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import enviromine.EnviroUtils;
+import enviromine.client.gui.EM_GuiEnviroMeters;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.gui.menu.EM_Gui_Menu;
 import enviromine.client.hud.HUDRegistry;
@@ -86,11 +85,15 @@ public class Gui_EventManager
     
     
     private ScaledResolution res = null;
-    
+	private int scaledwidth = 0;
+	private int scaledheight = 0;
+	
     private Minecraft mc = Minecraft.getMinecraft();
     
 	public static final ResourceLocation guiResource = new ResourceLocation("enviromine", "textures/gui/status_Gui.png");
 	public static final ResourceLocation blurOverlayResource = new ResourceLocation("enviromine", "textures/misc/blur.png");
+
+
 	
 	
 	public static EnviroDataTracker tracker = null;
@@ -142,59 +145,87 @@ public class Gui_EventManager
 		{
 			
 			ScaledResolution scaleRes = new ScaledResolution(Minecraft.getMinecraft(), Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
-			int scaledwidth = scaleRes.getScaledWidth();
-			int scaledheight = scaleRes.getScaledHeight();
+			scaledwidth = scaleRes.getScaledWidth();
+			scaledheight = scaleRes.getScaledHeight();
 			
-		HudItem.blinkTick++;
+			HudItem.blinkTick++;
 	
-    	for (HudItem huditem : HUDRegistry.getHudItemList()) 
-    	{
-    		if (mc.playerController.isInCreativeMode() && !huditem.isRenderedInCreative()) 
-    		{
-    			continue;
-    		}
-    		if (mc.thePlayer.ridingEntity instanceof EntityLivingBase) 
-    		{
-    			if (huditem.shouldDrawOnMount()) 
-    			{
-    				//Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
+			for (HudItem huditem : HUDRegistry.getHudItemList()) 
+			{
+				if (mc.playerController.isInCreativeMode() && !huditem.isRenderedInCreative()) 
+				{
+					continue;
+				}
+				if (mc.thePlayer.ridingEntity instanceof EntityLivingBase) 
+				{
+					if (huditem.shouldDrawOnMount()) 
+					{
+						//	Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
     				
     				
-    				if(UI_Settings.overlay) 
-    				{
-    					Minecraft.getMinecraft().renderEngine.bindTexture(Gui_EventManager.blurOverlayResource);
-    					huditem.renderScreenOverlay(scaledheight, scaledheight);
-    				}
+						if(UI_Settings.overlay) 
+						{
+							Minecraft.getMinecraft().renderEngine.bindTexture(huditem.getResource("TintOverlay"));
+							huditem.renderScreenOverlay(scaledheight, scaledheight);
+						}
     				
-    				Minecraft.getMinecraft().renderEngine.bindTexture(huditem.BindResource());
-    				huditem.fixBounds();
-    				huditem.render();
-    			}
-    		} else 
-    		{
-    			if (huditem.shouldDrawAsPlayer()) 
-    			{
-    				//Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
+						Minecraft.getMinecraft().renderEngine.bindTexture(huditem.getResource(""));
+						huditem.fixBounds();
+						huditem.render();
+					}
+				} else 
+				{
+					if (huditem.shouldDrawAsPlayer()) 
+					{
+						//Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
     				
-    				if(UI_Settings.overlay) 
-    				{
-    					Minecraft.getMinecraft().renderEngine.bindTexture(Gui_EventManager.blurOverlayResource);
-        				huditem.renderScreenOverlay(scaledwidth, scaledheight);
-    				}
+						if(UI_Settings.overlay) 
+						{
+							Minecraft.getMinecraft().renderEngine.bindTexture(huditem.getResource("TintOverlay"));
+							huditem.renderScreenOverlay(scaledwidth, scaledheight);
+						}
     				 				
-    				Minecraft.getMinecraft().renderEngine.bindTexture(huditem.BindResource());
-    				huditem.fixBounds();
-    				huditem.render();
-    			}
-    		}
-    	}
+						Minecraft.getMinecraft().renderEngine.bindTexture(huditem.getResource(""));
+						huditem.fixBounds();
+						huditem.render();
+					}
+				}
+			}	
     	
 		}
 		
-		
-
+//testing		
+		renderbreathing();
     	
+		
+		
+		
+		
+		
+		
+		
+		
+		
 	}
+    
+	public OverlayHandler OverlayHandler = new OverlayHandler();
+	
+    public Overlay maskBreathing = OverlayHandler.new Overlay(1, true);
+
+    private int alpha;
+    
+    public void renderbreathing()
+    {
+
+		
+		Minecraft.getMinecraft().renderEngine.bindTexture(EM_GuiEnviroMeters.blurOverlayResource);
+		
+		alpha = OverlayHandler.PulseWave(maskBreathing);
+		
+		
+		System.out.println(alpha);
+		//EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, maskBreathing.getRGBA(alpha));
+    }
 	
 }
 

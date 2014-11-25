@@ -73,7 +73,7 @@ public abstract class HudItem {
 
     public abstract int getHeight();
     
-    public abstract ResourceLocation BindResource();
+    public abstract ResourceLocation getResource(String type);
     
 	/**
 	 * Used to check if Frame is blinking
