@@ -1,17 +1,16 @@
 package enviromine.client.hud.items;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
-import enviromine.EnviroUtils;
+
+import org.lwjgl.opengl.GL11;
+
 import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
-import enviromine.client.hud.OverlayHandler;
-import enviromine.client.hud.OverlayHandler.Overlay;
+import enviromine.core.EM_Settings;
 import enviromine.utils.Alignment;
 import enviromine.utils.RenderAssist;
 
@@ -59,6 +58,11 @@ public class HudItemHydration extends HudItem	{
 		return 8;
 	}
 
+	@Override
+    public boolean isEnabledByDefault() {
+        return EM_Settings.enableHydrate;
+    }
+  
 	@Override
 	public boolean isBlinking() {
 

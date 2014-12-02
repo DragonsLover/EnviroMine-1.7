@@ -78,8 +78,7 @@ public class EM_ClientProxy extends EM_CommonProxy
 	public void preInit(FMLPreInitializationEvent event)
 	{
 		super.preInit(event);
-		
-		registerHudItems();
+
 	}
 	
 	@Override
@@ -146,6 +145,8 @@ public class EM_ClientProxy extends EM_CommonProxy
 	public void postInit(FMLPostInitializationEvent event)
 	{
 		super.postInit(event);
+		
+		registerHudItems();
 	}
 }
 

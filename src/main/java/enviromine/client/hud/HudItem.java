@@ -1,12 +1,8 @@
 package enviromine.client.hud;
 
-import javax.annotation.Resource;
-
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import enviromine.client.gui.UI_Settings;
-import enviromine.client.hud.OverlayHandler.Overlay;
 import enviromine.utils.Alignment;
 
 /**
@@ -28,8 +24,6 @@ public abstract class HudItem {
     public boolean blink = false;
     public static int blinkTick = 0;
     
-	protected OverlayHandler outer = new OverlayHandler();
-
     public HudItem() 
     {
         alignment = getDefaultAlignment();

@@ -19,14 +19,11 @@ import org.apache.logging.log4j.Level;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import enviromine.EnviroUtils;
-import enviromine.client.gui.EM_GuiEnviroMeters;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.gui.menu.EM_Gui_Menu;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
-import enviromine.client.hud.OverlayHandler;
-import enviromine.client.hud.OverlayHandler.Overlay;
+import enviromine.client.hud.items.GasMaskHud;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.handlers.EM_StatusManager;
@@ -150,7 +147,14 @@ public class Gui_EventManager
 			
 			HudItem.blinkTick++;
 	
-			for (HudItem huditem : HUDRegistry.getHudItemList()) 
+			// Render GasMask Overlays
+			if(UI_Settings.overlay)
+			{
+				GasMaskHud.renderGasMask();
+			}
+			
+			// Render Hud Items	
+			for (HudItem huditem : HUDRegistry.getActiveHudItemList()) 
 			{
 				if (mc.playerController.isInCreativeMode() && !huditem.isRenderedInCreative()) 
 				{
@@ -194,38 +198,9 @@ public class Gui_EventManager
     	
 		}
 		
-//testing		
-		renderbreathing();
-    	
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	}
     
-	public OverlayHandler OverlayHandler = new OverlayHandler();
-	
-    public Overlay maskBreathing = OverlayHandler.new Overlay(1, true);
 
-    private int alpha;
-    
-    public void renderbreathing()
-    {
-
-		
-		Minecraft.getMinecraft().renderEngine.bindTexture(EM_GuiEnviroMeters.blurOverlayResource);
-		
-		alpha = OverlayHandler.PulseWave(maskBreathing);
-		
-		
-		System.out.println(alpha);
-		//EnviroUtils.drawScreenOverlay(scaledwidth, scaledheight, maskBreathing.getRGBA(alpha));
-    }
 	
 }
 

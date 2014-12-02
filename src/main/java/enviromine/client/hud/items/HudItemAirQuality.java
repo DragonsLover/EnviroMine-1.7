@@ -1,7 +1,6 @@
 package enviromine.client.hud.items;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
@@ -12,8 +11,7 @@ import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
-import enviromine.client.hud.OverlayHandler;
-import enviromine.client.hud.OverlayHandler.Overlay;
+import enviromine.core.EM_Settings;
 import enviromine.utils.Alignment;
 import enviromine.utils.RenderAssist;
 
@@ -60,7 +58,12 @@ public class HudItemAirQuality extends HudItem	{
 
 		return 8;
 	}
-
+	
+	@Override
+    public boolean isEnabledByDefault() {
+        return EM_Settings.enableAirQ;
+    }
+    
 	@Override
 	public boolean isBlinking() {
 

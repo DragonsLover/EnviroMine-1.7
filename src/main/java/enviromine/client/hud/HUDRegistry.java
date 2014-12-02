@@ -39,9 +39,11 @@ public class HUDRegistry {
         }
         if (!hudItemList.contains(hudItem)) 
         {
+        	System.out.println(hudItem.getName() +":"+hudItem.isEnabledByDefault());
             hudItemList.add(hudItem);
             if (hudItem.isEnabledByDefault()) 
             {
+
                 enableHudItem(hudItem);
             }
         }

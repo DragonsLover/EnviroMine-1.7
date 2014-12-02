@@ -14,8 +14,7 @@ import enviromine.client.Gui_EventManager;
 import enviromine.client.gui.UI_Settings;
 import enviromine.client.hud.HUDRegistry;
 import enviromine.client.hud.HudItem;
-import enviromine.client.hud.OverlayHandler;
-import enviromine.client.hud.OverlayHandler.Overlay;
+import enviromine.core.EM_Settings;
 import enviromine.utils.Alignment;
 import enviromine.utils.RenderAssist;
 
@@ -56,6 +55,11 @@ public class HudItemTemperature extends HudItem {
 		return 8;
 	}
 
+	@Override
+    public boolean isEnabledByDefault() {
+        return EM_Settings.enableBodyTemp;
+    }
+  
 	@Override
 	public int getDefaultID() {
 		return 0;
