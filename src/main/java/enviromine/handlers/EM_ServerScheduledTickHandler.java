@@ -10,8 +10,8 @@ import cpw.mods.fml.common.gameevent.TickEvent.RenderTickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Type;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import enviromine.client.gui.SaveController;
 import enviromine.client.hud.HUDRegistry;
-import enviromine.client.hud.SaveController;
 import enviromine.core.EM_Settings;
 import enviromine.gases.GasBuffer;
 import enviromine.world.Earthquake;
@@ -57,12 +57,12 @@ public class EM_ServerScheduledTickHandler
             if (firstload && mc != null) 
             {
             	System.out.println("First Load...");
-                if (!SaveController.loadConfig("config"))
+                if (!SaveController.loadConfig(SaveController.UISettingsData))
                 {
                 	System.out.println("No Config Create one...");
                     HUDRegistry.checkForResize();
                     HUDRegistry.resetAllDefaults();
-                    SaveController.saveConfig("config");
+                    SaveController.saveConfig(SaveController.UISettingsData);
                 }
                 firstload = false;
             }

@@ -91,14 +91,14 @@ public abstract class HudItem {
     
 	public int getTextFrameWidth()
 	{
-		if(UI_Settings.ShowText) return 32;
+		if(UI_Settings.ShowText || rotated) return 32;
 		else return 0;
 	}
 	
 	
 	public int getIconPosX()
 	{
-		if(UI_Settings.minimalHud)
+		if(UI_Settings.minimalHud && !rotated)
 		{
 			if(!isLeftSide())
 				return posX - getTextFrameWidth() - 16;
@@ -107,8 +107,8 @@ public abstract class HudItem {
 		}
 		else
 		{
-			if(!isLeftSide())
-				return posX - getTextFrameWidth() - 16;
+			if(!isLeftSide() || rotated) 
+				return posX - getTextFrameWidth() - 16  + (rotated? 4 : 0);
 			else 
 				return posX + getWidth() + getTextFrameWidth();
 		}
@@ -203,8 +203,8 @@ public abstract class HudItem {
      * Ensures that the HudItem will never be off the screen
      */
     public void fixBounds() {
-        posX = Math.max(0, Math.min(HUDRegistry.screenWidth - getWidth(), posX));
-        posY = Math.max(0, Math.min(HUDRegistry.screenHeight - getHeight(), posY));
+        posX = Math.max(0, Math.min(HUDRegistry.screenWidth - (int)(getWidth() * UI_Settings.guiScale), posX));
+        posY = Math.max(0, Math.min(HUDRegistry.screenHeight - (int)(getHeight() * UI_Settings.guiScale), posY));
     }
 
     public void loadFromNBT(NBTTagCompound nbt) {
@@ -233,6 +233,7 @@ public abstract class HudItem {
         } else {
             rotated = false;
         }
+        
     }
 
     public void saveToNBT(NBTTagCompound nbt) {
@@ -244,7 +245,7 @@ public abstract class HudItem {
     }
 
     public boolean shouldDrawOnMount() {
-        return false;
+        return true;
     }
 
     public boolean shouldDrawAsPlayer() {

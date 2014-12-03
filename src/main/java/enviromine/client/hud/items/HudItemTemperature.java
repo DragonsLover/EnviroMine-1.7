@@ -108,7 +108,7 @@ public class HudItemTemperature extends HudItem {
 			
 		if(!UI_Settings.minimalHud)
 		{
-			int angle = 90;
+			int angle = -90;
 			GL11.glPushMatrix();
 
 			if(this.rotated)
@@ -150,7 +150,7 @@ public class HudItemTemperature extends HudItem {
 			
 		}
 		
-		if(UI_Settings.ShowText == true)
+		if(UI_Settings.ShowText == true && !this.rotated)
 		{
 				//Render Text Frame
 				RenderAssist.drawTexturedModalRect( getTextPosX(), posY, 64, getHeight() * 4, 32, getHeight());

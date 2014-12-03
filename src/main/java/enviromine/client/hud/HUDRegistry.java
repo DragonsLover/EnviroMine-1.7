@@ -43,7 +43,7 @@ public class HUDRegistry {
             hudItemList.add(hudItem);
             if (hudItem.isEnabledByDefault()) 
             {
-
+            	System.out.println("Add Item to Active List "+ hudItem.getName());
                 enableHudItem(hudItem);
             }
         }
@@ -57,6 +57,7 @@ public class HUDRegistry {
     {
         if (hudItemList.contains(hudItem) && !hudItemListActive.contains(hudItem)) 
         {
+        	System.out.println("Item Added to Active List "+ hudItem.getName());
             hudItemListActive.add(hudItem);
         }
     }
@@ -154,6 +155,8 @@ public class HUDRegistry {
         for (int i = 0; i < hudItemList.size(); i++) {
             HudItem hudItem = hudItemList.get(i);
             if (!nbt.hasKey(hudItem.getName())) {
+            	
+            	System.out.println("Did not find :" + hudItem.getName());
                 disableHudItem(hudItem);
             }
         }

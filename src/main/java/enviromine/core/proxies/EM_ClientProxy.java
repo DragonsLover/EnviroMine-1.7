@@ -87,12 +87,7 @@ public class EM_ClientProxy extends EM_CommonProxy
 		super.init(event);
 		EnviroKeybinds.Init();
         
-		if (!SaveController.loadConfig(SaveController.UISettingsData)) 
-        {
-        	SaveController.saveConfig(SaveController.UISettingsData);	
-        }
-		
-			
+		registerHudItems();
 		initRenderers();
 	}
 	
@@ -146,7 +141,7 @@ public class EM_ClientProxy extends EM_CommonProxy
 	{
 		super.postInit(event);
 		
-		registerHudItems();
+
 	}
 }
 

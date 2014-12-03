@@ -5,9 +5,8 @@ import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import enviromine.client.gui.UI_Settings;
+import enviromine.client.gui.SaveController;
 import enviromine.client.hud.HudItem;
-import enviromine.client.hud.SaveController;
 import enviromine.utils.Alignment;
 
 public class GuiScreenReposition extends GuiScreen {
@@ -73,7 +72,7 @@ public class GuiScreenReposition extends GuiScreen {
 		if (mouseState == 0) {
 			hudItem.alignment = Alignment.calculateAlignment(mouseX, mouseY);
 			mc.displayGuiScreen(parentScreen);
-			SaveController.saveConfig("config");
+			SaveController.saveConfig(SaveController.UISettingsData);
 		}
 	}
 
@@ -91,7 +90,7 @@ public class GuiScreenReposition extends GuiScreen {
 			hudItem.posX = oldPosX;
 			hudItem.posY = oldPosY;
 			mc.displayGuiScreen(parentScreen);
-			SaveController.saveConfig("config");
+			SaveController.saveConfig(SaveController.UISettingsData);
 		} else if (keyCode == 19) {
 			// hudItem.rotated = false;
 			hudItem.posX = hudItem.getDefaultPosX();
@@ -99,7 +98,7 @@ public class GuiScreenReposition extends GuiScreen {
 			hudItem.alignment = hudItem.getDefaultAlignment();
 			hudItem.fixBounds();
 			mc.displayGuiScreen(parentScreen);
-			SaveController.saveConfig("config");
+			SaveController.saveConfig(SaveController.UISettingsData);
 		}
 	}
 }

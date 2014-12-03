@@ -1,5 +1,9 @@
 package enviromine.client;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiIngameMenu;
@@ -7,6 +11,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent;
@@ -15,6 +20,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 
 import org.apache.logging.log4j.Level;
+import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
@@ -81,21 +87,18 @@ public class Gui_EventManager
 
     
     
-    private ScaledResolution res = null;
-	private int scaledwidth = 0;
-	private int scaledheight = 0;
+	private int scaledwidth, scaledheight;
+	
+	public static int scaleTranslateX, scaleTranslateY;
 	
     private Minecraft mc = Minecraft.getMinecraft();
     
 	public static final ResourceLocation guiResource = new ResourceLocation("enviromine", "textures/gui/status_Gui.png");
 	public static final ResourceLocation blurOverlayResource = new ResourceLocation("enviromine", "textures/misc/blur.png");
-
-
-	
 	
 	public static EnviroDataTracker tracker = null;
-    int i=0;
-    boolean up = true;
+    
+    
     @SubscribeEvent
 	@SideOnly(Side.CLIENT)
 	public void onGuiRender(RenderGameOverlayEvent.Post event)
@@ -106,6 +109,7 @@ public class Gui_EventManager
 
 			return;
 		}
+
 		
 	 	HUDRegistry.checkForResize();
 
@@ -140,7 +144,7 @@ public class Gui_EventManager
 		}
 		else
 		{
-			
+
 			ScaledResolution scaleRes = new ScaledResolution(Minecraft.getMinecraft(), Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
 			scaledwidth = scaleRes.getScaledWidth();
 			scaledheight = scaleRes.getScaledHeight();
@@ -150,9 +154,11 @@ public class Gui_EventManager
 			// Render GasMask Overlays
 			if(UI_Settings.overlay)
 			{
-				GasMaskHud.renderGasMask();
+				GasMaskHud.renderGasMask(scaleRes, mc);
 			}
 			
+			List<HudItem> that = HUDRegistry.getActiveHudItemList();
+					
 			// Render Hud Items	
 			for (HudItem huditem : HUDRegistry.getActiveHudItemList()) 
 			{
@@ -160,6 +166,7 @@ public class Gui_EventManager
 				{
 					continue;
 				}
+
 				if (mc.thePlayer.ridingEntity instanceof EntityLivingBase) 
 				{
 					if (huditem.shouldDrawOnMount()) 
@@ -175,12 +182,18 @@ public class Gui_EventManager
     				
 						Minecraft.getMinecraft().renderEngine.bindTexture(huditem.getResource(""));
 						huditem.fixBounds();
-						huditem.render();
+						
+						GL11.glPushMatrix();
+							GL11.glScalef((float) UI_Settings.guiScale, (float) UI_Settings.guiScale, (float) UI_Settings.guiScale);
+							GL11.glTranslated(UI_Settings.guiScale, UI_Settings.guiScale, UI_Settings.guiScale);
+							huditem.render();
+						GL11.glPopMatrix();
 					}
 				} else 
 				{
 					if (huditem.shouldDrawAsPlayer()) 
 					{
+
 						//Overlay overlay = OverlayHandler.getHudItemByID(huditem.getOverlayID());
     				
 						if(UI_Settings.overlay) 
@@ -190,14 +203,32 @@ public class Gui_EventManager
 						}
     				 				
 						Minecraft.getMinecraft().renderEngine.bindTexture(huditem.getResource(""));
+
+						
+						GL11.glPushMatrix();
+						
+	//					float transx = (float) (Math.abs(huditem.posX * UI_Settings.guiScale) - huditem.posX);
+//						float transy = (float) (Math.abs(huditem.posY * UI_Settings.guiScale) - huditem.posY);
+						
+
+						float transx = (float) ( huditem.posX - (huditem.posX * UI_Settings.guiScale));
+						float transy = (float) (huditem.posY - (huditem.posY * UI_Settings.guiScale));
+
+						GL11.glTranslated(transx,transy, 0);
+
+						GL11.glScalef((float) UI_Settings.guiScale, (float) UI_Settings.guiScale, (float) UI_Settings.guiScale);
+
 						huditem.fixBounds();
-						huditem.render();
+							huditem.render();
+							
+							GL11.glTranslated(0, 0, 0);
+						GL11.glPopMatrix();
 					}
 				}
 			}	
     	
 		}
-		
+
 	}
     
 

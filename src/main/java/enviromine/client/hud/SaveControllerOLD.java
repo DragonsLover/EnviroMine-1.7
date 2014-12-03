@@ -14,7 +14,7 @@ import net.minecraft.util.ReportedException;
 import enviromine.client.gui.UI_Settings;
 import enviromine.core.EnviroMine;
 
-public class SaveController {
+public class SaveControllerOLD {
     protected static final String dirName = Minecraft.getMinecraft().mcDataDir + File.separator + "config" + File.separator + "EnviroMine";
     protected static File dir = new File(dirName);
 

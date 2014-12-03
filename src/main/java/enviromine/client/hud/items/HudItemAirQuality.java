@@ -86,7 +86,8 @@ public class HudItemAirQuality extends HudItem	{
 	@Override
 	public void render() 
 	{
-		GL11.glPushMatrix();	
+		GL11.glPushMatrix();
+		
 		int airBar = MathHelper.ceiling_float_int((Gui_EventManager.tracker.airQuality / 100) * this.getWidth());
 		
 		int frameBorder = 4;
@@ -123,7 +124,6 @@ public class HudItemAirQuality extends HudItem	{
 			//Frame
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, getHeight() * frameBorder, getWidth(), getHeight());
 
-			
 			
 			GL11.glPopMatrix();
 		}
