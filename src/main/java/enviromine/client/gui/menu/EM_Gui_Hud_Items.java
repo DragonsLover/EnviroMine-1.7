@@ -43,7 +43,7 @@ public class EM_Gui_Hud_Items extends GuiScreen
 			
  			GuiButton Button = new GuiButton(hudItem.getDefaultID(), this.width / 2 + 5 - 20, this.height / 6 + 24 +(buttonCnt * 24) - 6, 120, 20, hudItem.getButtonLabel()  );
  			
- 			GuiButton rotateButton = new GuiButton(hudItem.getDefaultID()+200, this.width / 2 + 5 - 20 + 130, this.height / 6 + 24 +(buttonCnt * 24) - 6, 20, 20, "R" );
+ 			GuiButton rotateButton = new GuiButton(hudItem.getDefaultID()+200, this.width / 2 + 5 - 20 + 130, this.height / 6 + 24 +(buttonCnt * 24) - 6, 20, 20, (hudItem.rotated ? "V" : "H" ));
  			
 			
  			if(!hudItem.isEnabledByDefault()) Button.enabled = false;
@@ -104,6 +104,7 @@ public class EM_Gui_Hud_Items extends GuiScreen
 						if(hudItem.getDefaultID() == par1GuiButton.id - 200 )
 						{
 							hudItem.rotated = !hudItem.rotated;
+							par1GuiButton.displayString = (hudItem.rotated ? "V" : "H" );
 							break;
 						}
 						

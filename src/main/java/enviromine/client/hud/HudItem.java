@@ -91,8 +91,8 @@ public abstract class HudItem {
     
 	public int getTextFrameWidth()
 	{
-		if(UI_Settings.ShowText || rotated) return 32;
-		else return 0;
+		if(!UI_Settings.ShowText || rotated) return 0;
+		else return 32;
 	}
 	
 	
@@ -107,8 +107,12 @@ public abstract class HudItem {
 		}
 		else
 		{
-			if(!isLeftSide() || rotated) 
-				return posX - getTextFrameWidth() - 16  + (rotated? 4 : 0);
+			if(rotated)
+			{
+				return posX - 16 + (getHeight() / 2);
+			}
+			else if(!isLeftSide()) 
+				return posX - getTextFrameWidth() - 16  + (rotated? (getHeight() / 2) : 0);
 			else 
 				return posX + getWidth() + getTextFrameWidth();
 		}
@@ -203,7 +207,7 @@ public abstract class HudItem {
      * Ensures that the HudItem will never be off the screen
      */
     public void fixBounds() {
-        posX = Math.max(0, Math.min(HUDRegistry.screenWidth - (int)(getWidth() * UI_Settings.guiScale), posX));
+        posX = Math.max(0, Math.min(HUDRegistry.screenWidth - (int)( getWidth() * UI_Settings.guiScale), posX));
         posY = Math.max(0, Math.min(HUDRegistry.screenHeight - (int)(getHeight() * UI_Settings.guiScale), posY));
     }
 

@@ -108,14 +108,17 @@ public class HudItemTemperature extends HudItem {
 			
 		if(!UI_Settings.minimalHud)
 		{
-			int angle = -90;
+
 			GL11.glPushMatrix();
 
 			if(this.rotated)
 			{
+				int angle = -90;
+				int translateX = 0;
+				int translateY = 0;
 				GL11.glTranslatef(posX,posY, 0);
 				GL11.glRotatef( angle, 0, 0, 1 );
-				GL11.glTranslatef(-posX+(this.getHeight()/2),-posY -(this.getWidth()/2) -this.getHeight(), 0);
+				GL11.glTranslatef(-posX + 6,-posY - 8 + (getWidth() /2), 0);
 			}
 			//heat Bar
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, 24, getWidth(), getHeight());
@@ -131,10 +134,15 @@ public class HudItemTemperature extends HudItem {
 			
 			GL11.glPopMatrix();
 		}
-		
+
 		if(UI_Settings.ShowGuiIcons == true)
 		{
 			int iconPosX = getIconPosX();
+			if(rotated)
+			{
+				iconPosX = posX + 20;
+			}
+
 			// Render Icon
 			RenderAssist.drawTexturedModalRect(iconPosX, posY - 4, 0, 80, 16, 16);
 

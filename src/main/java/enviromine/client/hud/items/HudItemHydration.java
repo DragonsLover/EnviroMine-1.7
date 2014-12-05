@@ -102,16 +102,17 @@ public class HudItemHydration extends HudItem	{
 		
 		if(!UI_Settings.minimalHud)
 		{
-			int angle = 90;
 			GL11.glPushMatrix();
 
 			if(this.rotated)
 			{
+				int angle = -90;
+				int translateX = 0;
+				int translateY = 0;
 				GL11.glTranslatef(posX,posY, 0);
 				GL11.glRotatef( angle, 0, 0, 1 );
-				GL11.glTranslatef(-posX+(this.getHeight()/2),-posY -(this.getWidth()/2) -this.getHeight(), 0);
-			}
-			
+				GL11.glTranslatef(-posX + 6,-posY - 8 + (getWidth() /2), 0);
+			}			
 			//Bar
 			RenderAssist.drawTexturedModalRect(posX, posY, 0, 0, getWidth(), getHeight());
 			RenderAssist.drawTexturedModalRect(posX, posY, 64, 0, waterBar, getHeight());
@@ -130,11 +131,15 @@ public class HudItemHydration extends HudItem	{
 		if(UI_Settings.ShowGuiIcons == true)
 		{
 			int iconPosX = getIconPosX();
+			if(rotated)
+			{
+				iconPosX = posX + 20;
+			}
 			// Render Icon
 			RenderAssist.drawTexturedModalRect(iconPosX, posY - 4, 16, 80, 16, 16);
 		}
 		
-		if(UI_Settings.ShowText == true)
+		if(UI_Settings.ShowText == true && !rotated)
 		{
 				//Render Text Frame
 				RenderAssist.drawTexturedModalRect( getTextPosX(), posY, 64, getHeight() * 4, 32, getHeight());
