@@ -32,7 +32,6 @@ public abstract class HudItem {
         id = getDefaultID();
         phase = 0;
         
-        //registerOverlay();
     }
 
     /**
@@ -82,11 +81,6 @@ public abstract class HudItem {
 
     public abstract void render();
 
-    //public abstract void renderText();
-    
-    //public abstract void renderIcon();
-
-    
     public abstract void renderScreenOverlay(int scaledwidth, int scaledheight);
     
 	public int getTextFrameWidth()

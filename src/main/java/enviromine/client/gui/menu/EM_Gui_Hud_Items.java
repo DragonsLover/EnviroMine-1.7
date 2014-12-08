@@ -60,8 +60,8 @@ public class EM_Gui_Hud_Items extends GuiScreen
 		//this.buttonList.add(new GuiButton(102, this.width / 2 + 5 - 20, this.height / 6 + 48 - 6, 120, 20,  HUDRegistry.getHudItemByID(0).getButtonLabel() ));
 		//this.buttonList.add(new GuiButton(103, this.width / 2 + 5 - 20, this.height / 6 + 72 - 6, 120, 20,  HUDRegistry.getHudItemByID(2).getButtonLabel() ));
 		//this.buttonList.add(new GuiButton(104, this.width / 2 + 5 - 20, this.height / 6 + 96 - 6, 120, 20,  HUDRegistry.getHudItemByID(3).getButtonLabel() ));
-
-		this.buttonList.add(new GuiButton(800, this.width / 2 - 75, this.height / 6 + 120 - 6, 150, 20, I18n.format( "gui.back", new Object[0])));
+		buttonCnt++;
+		this.buttonList.add(new GuiButton(800, this.width / 2 - 75, this.height / 6 + 24 +(buttonCnt * 24) - 6, 150, 20, I18n.format( "gui.back", new Object[0])));
 		
 		
 		

@@ -47,7 +47,7 @@ public class HudItemTemperature extends HudItem {
 
 	@Override
 	public int getWidth() {
-		return UI_Settings.minimalHud ? 0 : 64;
+		return UI_Settings.minimalHud && !rotated ? 0 : 64;
 	}
 
 	@Override
@@ -106,7 +106,7 @@ public class HudItemTemperature extends HudItem {
 		if(preheatIco > 24)	preheatIco = 24; 
 		else if(preheatIco < 0)	preheatIco = 0;
 			
-		if(!UI_Settings.minimalHud)
+		if(!UI_Settings.minimalHud || rotated)
 		{
 
 			GL11.glPushMatrix();
