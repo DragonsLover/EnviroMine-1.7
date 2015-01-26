@@ -3,7 +3,9 @@ package enviromine.handlers;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
 import org.apache.logging.log4j.Level;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
@@ -35,7 +37,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.EnumPlantType;
+
 import com.google.common.base.Stopwatch;
+
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import enviromine.EnviroPotion;
@@ -45,6 +49,7 @@ import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.network.packet.PacketEnviroMine;
 import enviromine.trackers.EnviroDataTracker;
+import enviromine.trackers.items.EnviroDataManager;
 import enviromine.trackers.properties.ArmorProperties;
 import enviromine.trackers.properties.BiomeProperties;
 import enviromine.trackers.properties.BlockProperties;
@@ -56,6 +61,7 @@ import enviromine.utils.EnviroUtils;
 public class EM_StatusManager
 {
 	public static HashMap<String,EnviroDataTracker> trackerList = new HashMap<String,EnviroDataTracker>();
+	public static HashMap<String,EnviroDataManager> NEWtrackerList = new HashMap<String,EnviroDataManager>();
 	
 	public static void addToManager(EnviroDataTracker tracker)
 	{

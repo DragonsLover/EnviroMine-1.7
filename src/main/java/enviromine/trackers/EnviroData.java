@@ -2,6 +2,7 @@ package enviromine.trackers;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 import org.apache.logging.log4j.Level;
 
@@ -35,14 +36,13 @@ import enviromine.trackers.properties.BlockProperties;
 import enviromine.trackers.properties.DimensionProperties;
 import enviromine.trackers.properties.EntityProperties;
 import enviromine.trackers.properties.ItemProperties;
+import enviromine.utils.EnviroUtils;
 
 public class EnviroData 
 {
 	public int solidBlocks;
 	public Boolean nearLava;
 	
-	public int lightLev;
-	public int blockLightLev;
 	public float dayPercent;
 	
 	EnviroDataManager entityLiving;
@@ -51,24 +51,42 @@ public class EnviroData
 	public boolean isRaining;
 	public boolean isShade;
 	
+	public int lightLev;
+	public int blockLightLev;
+	
 
+	private int i;
+	private int j;
+	private int k;
+	
+	Chunk chunk;
+	BiomeGenBase biome;
+	DimensionProperties dimensionProp = null;
+	
 	public EnviroData(EnviroDataManager entityLiving)
 	{
 		this.entityLiving = entityLiving;
 		
+		i = MathHelper.floor_double(entityLiving.trackedEntity.posX);
+		j = MathHelper.floor_double(entityLiving.trackedEntity.posY);
+		k = MathHelper.floor_double(entityLiving.trackedEntity.posZ);
+		
+		lightLev = 0;
+		blockLightLev = 0;
+		
+		isRaining = entityLiving.trackedEntity.worldObj.isRaining();
+		isShade = entityLiving.trackedEntity.worldObj.canBlockSeeTheSky( MathHelper.floor_double(entityLiving.trackedEntity.posX),  MathHelper.floor_double(entityLiving.trackedEntity.posY),  MathHelper.floor_double(entityLiving.trackedEntity.posZ));
+		
+		//Note: This is offset slightly so that heat peaks after noon.
+		float scale = 1.25F; // Anything above 1 forces the maximum and minimum temperatures to plateau when they're reached noon
+		dayPercent = MathHelper.clamp_float((float)(Math.sin(Math.toRadians(((entityLiving.trackedEntity.worldObj.getWorldTime()%24000L)/24000D)*360F - 30F))*0.5F + 0.5F)*scale, 0F, 1F);
+
 		isDayTime = entityLiving.trackedEntity.worldObj.isDaytime();
 		
 		if(entityLiving.trackedEntity.worldObj.provider.hasNoSky)
 		{
 			isDayTime = false;
 		}
-
-		isRaining = entityLiving.trackedEntity.worldObj.isRaining();
-		isShade = entityLiving.trackedEntity.worldObj.canBlockSeeTheSky( MathHelper.floor_double(entityLiving.trackedEntity.posX),  MathHelper.floor_double(entityLiving.trackedEntity.posY),  MathHelper.floor_double(entityLiving.trackedEntity.posZ));
-		
-		//Note: This is offset slightly so that heat peaks after noon.
-		float scale = 1.25F; // Anything above 1 forces the maximum and minimum temperatures to plateau when they're reached
-		dayPercent = MathHelper.clamp_float((float)(Math.sin(Math.toRadians(((entityLiving.trackedEntity.worldObj.getWorldTime()%24000L)/24000D)*360F - 30F))*0.5F + 0.5F)*scale, 0F, 1F);
 		
 		Run();
 	}
@@ -91,44 +109,25 @@ public class EnviroData
 	
 	private void getData()
 	{
-		int i = MathHelper.floor_double(entityLiving.trackedEntity.posX);
-		int j = MathHelper.floor_double(entityLiving.trackedEntity.posY);
-		int k = MathHelper.floor_double(entityLiving.trackedEntity.posZ);
-		
+
 		if(entityLiving.trackedEntity.worldObj == null)
 		{
 			return;
 		}
 		
-		Chunk chunk = entityLiving.trackedEntity.worldObj.getChunkFromBlockCoords(i, k);
-		
-		if(chunk == null)
-		{
-			return;
-		}
-		
-		BiomeGenBase biome = chunk.getBiomeGenForWorldCoords(i & 15, k & 15, entityLiving.trackedEntity.worldObj.getWorldChunkManager());
-		
-		if(biome == null)
-		{
-			return;
-		}
-		
-		DimensionProperties dimensionProp = null;
+		// Null Checks
+		if((chunk = entityLiving.trackedEntity.worldObj.getChunkFromBlockCoords(i, k)) == null) return;
+
+		if((biome = chunk.getBiomeGenForWorldCoords(i & 15, k & 15, entityLiving.trackedEntity.worldObj.getWorldChunkManager())) == null) return;
+	
+		//Grabs custom Dimension Properties
 		if(EM_Settings.dimensionProperties.containsKey(entityLiving.trackedEntity.worldObj.provider.dimensionId))
 		{ 
 			dimensionProp = EM_Settings.dimensionProperties.get(entityLiving.trackedEntity.worldObj.provider.dimensionId);
 		}
 		
-
-		if(entityLiving.trackedEntity.worldObj.provider.hasNoSky)
-		{
-			isDayTime = false;
-		}
 		
-		int lightLev = 0;
-		int blockLightLev = 0;
-		
+		// gets light levels around player
 		if(j > 0)
 		{
 			if(j >= 256)
@@ -151,10 +150,6 @@ public class EnviroData
 	 */
 	private void getSurroundingData(int range)
 	{
-		int i = MathHelper.floor_double(entityLiving.trackedEntity.posX);
-		int j = MathHelper.floor_double(entityLiving.trackedEntity.posY);
-		int k = MathHelper.floor_double(entityLiving.trackedEntity.posZ);
-		
 		float dist = 0;
 		
 		Chunk checkChunk;
@@ -166,17 +161,19 @@ public class EnviroData
 			{
 				for(int z = -range; z <= range; z++)
 				{
+					checkChunk = entityLiving.trackedEntity.worldObj.getChunkFromBlockCoords((i + x), (k + z));
+					checkBiome = checkChunk.getBiomeGenForWorldCoords((i + x) & 15, (k + z) & 15, entityLiving.trackedEntity.worldObj.getWorldChunkManager());
+					Vector xyz = new Vector();	xyz.addElement(x);xyz.addElement(y);xyz.addElement(z);
+					
 					if(y == 0)
 					{
-						checkChunk = entityLiving.trackedEntity.worldObj.getChunkFromBlockCoords((i + x), (k + z));
-						checkBiome = checkChunk.getBiomeGenForWorldCoords((i + x) & 15, (k + z) & 15, entityLiving.trackedEntity.worldObj.getWorldChunkManager());
-						
 						BiomeProperties biomeOverride = null;
 						if(EM_Settings.biomeProperties.containsKey(checkBiome.biomeID))
 						{
 							biomeOverride = EM_Settings.biomeProperties.get(checkBiome.biomeID);
 						}
-						
+
+					}
 						if(!EM_PhysManager.blockNotSolid(entityLiving.trackedEntity.worldObj, x + i, y + j, z + k, false))
 						{
 							solidBlocks += 1;
@@ -206,7 +203,11 @@ public class EnviroData
 								blockProps = EM_Settings.blockProperties.get("" + Block.blockRegistry.getNameForObject(block));
 							}
 							
+							// Hard Coded
 							entityLiving.airQuality.LoopSurroundingData(entityLiving.trackedEntity);
+							//entityLiving.bodyTemp.LoopSurroundingData(entityLiving.trackedEntity);
+							//entityLiving.sanity.LoopSurroundingData(entityLiving.trackedEntity);
+							//entityLiving.hydration.LoopSurroundingData(entityLiving.trackedEntity);
 							
 							//TODO Than call rest and customs
 							
@@ -216,7 +217,7 @@ public class EnviroData
 						{
 							nearLava = true;
 						}
-					}
+					
 				}
 			}
 		}

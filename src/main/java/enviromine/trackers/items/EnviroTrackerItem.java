@@ -38,6 +38,9 @@ public abstract class EnviroTrackerItem
 	private float riseValue;
 	private float dropValue;
 	
+	private float MaxRiseValue;
+	private float MaxDropValue;
+	
 	private float dropTimer;
 	
 
@@ -70,6 +73,11 @@ public abstract class EnviroTrackerItem
 	
 	public abstract String getName();
 	
+	/**
+	 * This Returns data to EnviroData
+	 * 
+	 * @param trackedEntity
+	 */
 	public abstract void LoopSurroundingData(EntityLivingBase trackedEntity);
 	
 	public abstract void EntityPlayerAction(float[] enviroData, EntityLivingBase trackedEntity);
