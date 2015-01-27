@@ -3,7 +3,6 @@ package enviromine.client.gui.menu.update;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.lwjgl.input.Mouse;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiListExtended;
@@ -11,6 +10,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.StatCollector;
+import org.lwjgl.input.Mouse;
 import com.google.common.collect.Lists;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -21,9 +21,9 @@ import enviromine.utils.RenderAssist;
 public class PostGuiList extends GuiListExtended
 {
 	
-	private final List LineList = Lists.newArrayList();
-	private WordPressPost lastPost;
-	private WordPressPost curPost;
+	private final List<Row> LineList = Lists.newArrayList();
+	//private WordPressPost lastPost;
+	//private WordPressPost curPost;
 	/** The buttonID of the button used to scroll up */
 	private int scrollUpButtonID;
 	/** The buttonID of the button used to scroll down */
@@ -69,48 +69,65 @@ public class PostGuiList extends GuiListExtended
 		
 		if(verStat == -1)
 		{
-			addLine("Your current version is " + EM_Settings.Version);
+			addLine(StatCollector.translateToLocalFormatted("news.enviromine.version.current", EM_Settings.Version));
 			addBlankLines(1);
 			addLine(StatCollector.translateToLocalFormatted("updatemsg.enviromine.avalible", UpdateNotification.version));
 			addBlankLines(1);
-			addLine("Check changlog for whats new.");
+			addLine(StatCollector.translateToLocalFormatted("news.enviromine.news.changelog"));
 			addBlankLines(1);
-			addLine("Download new version on our wiki!");
+			addLine(StatCollector.translateToLocalFormatted("news.enviromine.news.wiki"));
 			addBlankLines(1);
 			addLine("https://github.com/Funwayguy/EnviroMine/wiki/Downloads");
 			addBlankLines(1);
 			addLine("https://enviromine.wordpress.com/");
 		} else if(verStat == 0)
 		{
-			addLine("EnviroMine " + EM_Settings.Version + " is up to date");
+			addLine(StatCollector.translateToLocalFormatted("updatemsg.enviromine.uptodate", EM_Settings.Version));
 		} else if(verStat == 1)
 		{
-			addLine("EnviroMine " + EM_Settings.Version + " is a debug version");
+			addLine(StatCollector.translateToLocalFormatted("updatemsg.enviromine.debug", EM_Settings.Version));
 		} else if(verStat == -2)
 		{
-			addLine("An error occured while parsing EnviroMine's version file!");
+			addLine(StatCollector.translateToLocalFormatted("updatemsg.enviromine.error"));
 		}
 		
 	}
 	
 	public void DisplayChangeLog(Minecraft mc)
 	{
-		List wordWrap = mc.fontRenderer.listFormattedStringToWidth(WordPressPost.changeLog, this.width - 64);
+		String[] changlog = WordPressPost.changeLog.split("\n");
 		
-		addWordWrap(wordWrap);
+		List<String> lineBreaks = Lists.newArrayList();
+		List<String> wordWrap = Lists.newArrayList();
+		
+		for(String line : changlog)
+		{
+			@SuppressWarnings("unchecked")
+			List<String> lines = mc.fontRenderer.listFormattedStringToWidth(line, this.width - 64);
+			
+			wordWrap.addAll(lines);
+			
+			for(int i = 1; i <= lines.size(); i++)
+			{
+				lineBreaks.add(i + "," + lines.size());
+			}
+		}
+		
+		addWordWrap(wordWrap, lineBreaks);
 	}
 	
 	public void DisplayWordPressNews(Minecraft mc)
 	{
 		for(WordPressPost post : WordPressPost.Posts)
 		{
-			addLine(EnumChatFormatting.BOLD.UNDERLINE + post.getTitle(), textType.TITLE);
+			addLine(EnumChatFormatting.BOLD + "" + EnumChatFormatting.UNDERLINE + post.getTitle(), textType.TITLE);
 			addBlankLines(1);
 			
 			addLine("Posted: " + EnumChatFormatting.ITALIC + post.getPubDate(), textType.DATE);
 			addBlankLines(1);
 			
-			List wordWrap = mc.fontRenderer.listFormattedStringToWidth(post.getDescription(), this.width - 64);
+			@SuppressWarnings("unchecked")
+			List<String> wordWrap = mc.fontRenderer.listFormattedStringToWidth(post.getDescription(), this.width - 64);
 			
 			addWordWrap(wordWrap);
 			
@@ -124,20 +141,55 @@ public class PostGuiList extends GuiListExtended
 		
 	}
 	
-	/**
-	 * Pass String and will wordwrap it to screen and add to list to be drawn
-	 * @param wordWrap
-	 */
-	private void addWordWrap(List wordWrap)
+	
+	private void addWordWrap(List<String> wordWrap)
 	{
 		textType type;
-		Iterator wrapped = wordWrap.iterator();
+		Iterator<String> wrapped = wordWrap.iterator();
 		while(wrapped.hasNext())
 		{
 			Object line = wrapped.next();
 			type = textType.DEFAULT;
+			LineList.add(new PostGuiList.Row(line.toString(), type));
+		}
+
+	}
+	/**
+	 * Pass String and will wordwrap it to screen and add to list to be drawn
+	 * @param wordWrap
+	 */
+	private void addWordWrap(List<String> wordWrap, List<String> LineBreaks)
+	{
+		textType type;
+		textType lasttype =  textType.DEFAULT;
+		
+		Iterator<String> wrapped = wordWrap.iterator();
+		
+		Iterator<String> breaks = LineBreaks.iterator();
+		while(wrapped.hasNext())
+		{
+			Object line = wrapped.next();
+			Object linenum = breaks.next();
+
+			type = textType.DEFAULT;
+			
 			if(NewsPage.tabSelection == 152)
-				type = parseChangelog(line.toString());
+			{
+				String[] count = linenum.toString().split(",");
+				
+				if(Integer.parseInt(count[0]) == 1)
+				{
+					type = parseChangelog(line.toString());
+					lasttype = type;
+				}
+				else if (Integer.parseInt(count[0]) <= Integer.parseInt(count[1]))
+				{
+					type = lasttype;
+					
+					if (Integer.parseInt(count[0]) == Integer.parseInt(count[1])) lasttype = textType.DEFAULT;
+				}
+				//type = parseChangelog(line.toString());
+			}
 			
 			LineList.add(new PostGuiList.Row(line.toString(), type));
 		}
@@ -177,9 +229,9 @@ public class PostGuiList extends GuiListExtended
 	{
 		line = line.toLowerCase();
 		Pattern versionNum = Pattern.compile("\\[.+\\]");
-		Pattern change = Pattern.compile(".*(fixed | \\* | fix | fixes | bug | changed).*");
-		Pattern add = Pattern.compile(".*(added | \\+ | new).*");
-		Pattern removed = Pattern.compile(".*(removed | deleted | revert).*");
+		Pattern change = Pattern.compile(".*(fixed|\\*|fix|fixes|bug|changed).*");
+		Pattern add = Pattern.compile(".*(added|\\+|new|adding).*");
+		Pattern removed = Pattern.compile(".*(removed|deleted|revert).*");
 		Pattern header = Pattern.compile(".*full enviromine changelog.*");
 		
 		if(versionNum.matcher(line).matches())
@@ -207,6 +259,12 @@ public class PostGuiList extends GuiListExtended
 		else
 			return textType.DEFAULT;
 	}
+	
+    /**
+     * Breaks a string into a list of pieces that will fit a specified width.
+     */
+
+	
 	
 	@Override
 	public IGuiListEntry getListEntry(int p_148180_1_)
@@ -287,8 +345,8 @@ public class PostGuiList extends GuiListExtended
 	@SideOnly(Side.CLIENT)
 	public static class Row implements GuiListExtended.IGuiListEntry
 	{
-		private WordPressPost post;
-		private WordPressPost lastPost;
+		//private WordPressPost post;
+		//private WordPressPost lastPost;
 		Minecraft mc = Minecraft.getMinecraft();
 		public static int LastYpos = 0;
 		private String line;

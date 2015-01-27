@@ -43,6 +43,7 @@ public class Gui_EventManager
 	GuiButton enviromine;
 	
 	// Captures the initiation of vanilla menus to render new buttons
+	@SuppressWarnings("unchecked")
 	@SubscribeEvent
 	public void renderevent(InitGuiEvent.Post event)
 	{
@@ -51,7 +52,7 @@ public class Gui_EventManager
 		
 		if(event.gui instanceof GuiIngameMenu)
 		{
-			String newPost = UpdateNotification.isNewPost() ? "(New Post)" : "";
+			String newPost = UpdateNotification.isNewPost() ? " " + StatCollector.translateToLocal("news.enviromine.newpost") : "";
 			
 			try
 			{
@@ -191,15 +192,17 @@ public class Gui_EventManager
 						
 						RenderAssist.bindTexture(huditem.getResource(""));
 						
-						float transx = (float)(huditem.posX - (huditem.posX * UI_Settings.guiScale));
-						float transy = (float)(huditem.posY - (huditem.posY * UI_Settings.guiScale));
+						//float transx = (float)(huditem.posX - (huditem.posX * UI_Settings.guiScale));
+						//float transy = (float)(huditem.posY - (huditem.posY * UI_Settings.guiScale));
 						
-						GL11.glTranslated(transx, transy, 0);
+						//GL11.glTranslated(transx, transy, 0);
 						
-						GL11.glScalef((float)UI_Settings.guiScale, (float)UI_Settings.guiScale, (float)UI_Settings.guiScale);
+						//GL11.glScalef((float)UI_Settings.guiScale, (float)UI_Settings.guiScale, (float)UI_Settings.guiScale);
 						
 						huditem.fixBounds();
 						huditem.render();
+						
+						
 					}
 				} else
 				{
@@ -213,17 +216,18 @@ public class Gui_EventManager
 						
 						RenderAssist.bindTexture(huditem.getResource(""));
 						
-						float transx = (float)(huditem.posX - (huditem.posX * UI_Settings.guiScale));
-						float transy = (float)(huditem.posY - (huditem.posY * UI_Settings.guiScale));
+						//float transx = (float)(huditem.posX - (huditem.posX * UI_Settings.guiScale));
+						//float transy = (float)(huditem.posY - (huditem.posY * UI_Settings.guiScale));
 						
-						GL11.glTranslated(transx, transy, 0);
+						//GL11.glTranslated(transx, transy, 0);
 						
-						GL11.glScalef((float)UI_Settings.guiScale, (float)UI_Settings.guiScale, (float)UI_Settings.guiScale);
+						//GL11.glScalef((float)UI_Settings.guiScale, (float)UI_Settings.guiScale, (float)UI_Settings.guiScale);
 						
 						huditem.fixBounds();
 						huditem.render();
 						
-						GL11.glTranslated(0, 0, 0);
+						//GL11.glTranslated(0, 0, 0);
+						
 					}
 				}
 				

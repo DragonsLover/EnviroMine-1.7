@@ -33,7 +33,7 @@ public class EM_ServerScheduledTickHandler
 			
 			Earthquake.updateEarthquakes();
 			
-			if(EM_Settings.enableQuakes && tick.world.getTotalWorldTime()%24000 < 100 && MathHelper.floor_double(tick.world.getTotalWorldTime()/24000L) != Earthquake.lastTickDay && !tick.world.provider.isHellWorld)
+			if(EM_Settings.enableQuakes && MathHelper.floor_double(tick.world.getTotalWorldTime()/24000L) != Earthquake.lastTickDay)
 			{
 				Earthquake.lastTickDay = MathHelper.floor_double(tick.world.getTotalWorldTime()/24000L);
 				Earthquake.TickDay(tick.world);
@@ -42,7 +42,7 @@ public class EM_ServerScheduledTickHandler
 	}
 	
 	// Used for to load up SaveContoler for clients side GUI settings
-    private boolean ticked = false;
+    //private boolean ticked = false;
     private boolean firstload = true;
 
     @SubscribeEvent

@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.renderer.entity.RenderBiped;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -45,6 +46,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
@@ -54,11 +56,13 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.BiomeGenBase.SpawnListEntry;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent17;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -78,6 +82,7 @@ import net.minecraftforge.event.world.WorldEvent.Save;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.opengl.GL11;
+import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.Event.Result;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -88,6 +93,9 @@ import enviromine.EnviroDamageSource;
 import enviromine.EnviroPotion;
 import enviromine.blocks.tiles.TileEntityGas;
 import enviromine.client.ModelCamelPack;
+import enviromine.client.gui.EM_GuiAuthWarn;
+import enviromine.client.gui.menu.config.EM_ConfigMenu;
+import enviromine.core.EM_ConfigHandler;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.gases.GasBuffer;
@@ -100,15 +108,18 @@ import enviromine.trackers.properties.DimensionProperties;
 import enviromine.trackers.properties.EntityProperties;
 import enviromine.trackers.properties.ItemProperties;
 import enviromine.utils.EnviroUtils;
+import enviromine.utils.LockedClass;
 import enviromine.world.Earthquake;
 import enviromine.world.features.mineshaft.MineshaftBuilder;
 
-public class EM_EventManager
+public class EM_EventManager extends LockedClass
 {
 	@SubscribeEvent
 	public void onEntityJoinWorld(EntityJoinWorldEvent event)
 	{
 		boolean chunkPhys = true;
+		
+		DimensionProperties dProps = EM_Settings.dimensionProperties.get(event.world.provider.dimensionId);
 		
 		if(!event.world.isRemote)
 		{
@@ -116,6 +127,11 @@ public class EM_EventManager
 			{
 				chunkPhys = (EM_PhysManager.chunkDelay.get(event.world.provider.dimensionId + "" + (MathHelper.floor_double(event.entity.posX) >> 4) + "," + (MathHelper.floor_double(event.entity.posZ) >> 4)) < event.world.getTotalWorldTime());
 			}
+		}
+		
+		if(dProps != null && !dProps.physics)
+		{
+			chunkPhys = false;
 		}
 		
 		if(EM_Settings.foodSpoiling)
@@ -1493,7 +1509,7 @@ public class EM_EventManager
 			d3 = ((EntityPlayerMP)par2EntityPlayer).theItemInWorldManager.getBlockReachDistance();
 		}
 		Vec3 vec31 = vec3.addVector((double)f7 * d3, (double)f6 * d3, (double)f8 * d3);
-		return par1World.func_147447_a(vec3, vec31, par3, !par3, false); //TODO
+		return par1World.func_147447_a(vec3, vec31, par3, !par3, false);
 	}
 	
 	/* Client only events */
@@ -1525,6 +1541,7 @@ public class EM_EventManager
 	
 	HashMap<String, EntityLivingBase> playerMob = new HashMap<String, EntityLivingBase>();
 	
+	@SuppressWarnings("unchecked")
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
 	public void onRender(RenderPlayerEvent.Pre event)
@@ -1666,7 +1683,8 @@ public class EM_EventManager
 				}
 				
 				int disp = (fill <= 0 ? 0 : fill > max ? 100 : (int)(((float)fill/(float)max)*100));
-				event.toolTip.add("Water: " + disp + "% ("+fill+"/"+max+")");
+				event.toolTip.add(new ChatComponentTranslation("misc.enviromine.tooltip.water", disp + "%",  fill, max).getUnformattedText());
+				//event.toolTip.add("Water: " + disp + "% ("+fill+"/"+max+")");
 			}
 			
 			if(event.itemStack.getTagCompound().getLong("EM_ROT_DATE") > 0 && EM_Settings.foodSpoiling)
@@ -1677,11 +1695,12 @@ public class EM_EventManager
 				
 				if(curTime - rotDate <= 0)
 				{
-					event.toolTip.add("Rotten: 0% (Day " + MathHelper.floor_double((curTime - rotDate)/24000L) + "/" + MathHelper.floor_double(rotTime/24000L) + ")");
+					event.toolTip.add(new ChatComponentTranslation("misc.enviromine.tooltip.rot", "0%" , MathHelper.floor_double((curTime - rotDate)/24000L) , MathHelper.floor_double(rotTime/24000L)).getUnformattedText());
+					//event.toolTip.add("Rotten: 0% (Day " + MathHelper.floor_double((curTime - rotDate)/24000L) + "/" + MathHelper.floor_double(rotTime/24000L) + ")");
 					//event.toolTip.add("Use-By: Day " + MathHelper.floor_double((rotDate + rotTime)/24000L));
 				} else
 				{
-					event.toolTip.add("Rotten: " + MathHelper.floor_double((curTime - rotDate)/rotTime * 100D) + "% (Day " + MathHelper.floor_double((curTime - rotDate)/24000L) + "/" + MathHelper.floor_double(rotTime/24000L) + ")");
+					event.toolTip.add(new ChatComponentTranslation("misc.enviromine.tooltip.rot", MathHelper.floor_double((curTime - rotDate)/rotTime * 100D) + "%", MathHelper.floor_double((curTime - rotDate)/24000L), MathHelper.floor_double(rotTime/24000L)).getUnformattedText());
 					//event.toolTip.add("Use-By: Day " + MathHelper.floor_double((rotDate + rotTime)/24000L));
 				}
 			}
@@ -1691,8 +1710,44 @@ public class EM_EventManager
 				int i = event.itemStack.getTagCompound().getInteger("gasMaskFill");
 				int max = event.itemStack.getTagCompound().getInteger("gasMaskMax");
 				int disp = (i <= 0 ? 0 : i > max ? 100 : (int)(i/(max/100F)));
-				event.toolTip.add("Filters: " + disp + "%");
+				event.toolTip.add(new ChatComponentTranslation("misc.enviromine.tooltip.filter", disp + "%", i, max).getUnformattedText());
 			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
+	{
+		if(event.modID.equals(EM_Settings.ModID))
+		{
+			for(Configuration config : EM_ConfigMenu.tempConfigs)
+			{
+				config.save();
+			}
+			
+			EM_Settings.armorProperties.clear();
+			EM_Settings.blockProperties.clear();
+			EM_Settings.itemProperties.clear();
+			EM_Settings.livingProperties.clear();
+			EM_Settings.stabilityTypes.clear();
+			EM_Settings.biomeProperties.clear();
+			EM_Settings.dimensionProperties.clear();
+			EM_Settings.rotProperties.clear();
+			EM_Settings.caveGenProperties.clear();
+			EM_Settings.caveSpawnProperties.clear();;
+			
+			EM_ConfigHandler.initConfig();
+			
+			EnviroMine.caves.RefreshSpawnList();
+		}
+	}
+	
+	@SubscribeEvent
+	public void onGuiOpen(GuiOpenEvent event)
+	{
+		if(event.gui instanceof GuiMainMenu && EM_GuiAuthWarn.shouldWarn)// && !EM_Settings.Version.equals("FWG_" + "EM_VER"))
+		{
+			event.gui = new EM_GuiAuthWarn(event.gui);
 		}
 	}
 }

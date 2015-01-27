@@ -4,15 +4,13 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
-
+import net.minecraft.util.StatCollector;
 import org.apache.logging.log4j.Level;
-
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
@@ -103,6 +101,8 @@ public class UpdateNotification
 			String page = getUrl("http://bit.ly/1pwDr2o", true);
 			String[] data = page.split("\\n");
 			
+			String[] rawVer = data[0].trim().split("\\.");
+			version = rawVer[0] + "." + rawVer[1] + "." + rawVer[2];
 			
 			if(!EM_Settings.updateCheck)
 			{
@@ -115,7 +115,6 @@ public class UpdateNotification
 				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.RESET + "" + data[i].trim()));
 			}*/
 			
-			version = data[0].trim();
 			String http = data[1].trim();
 			
 			int verStat = compareVersions(EM_Settings.Version, version);
@@ -125,11 +124,11 @@ public class UpdateNotification
 				event.player.addChatMessage(new ChatComponentTranslation("updatemsg.enviromine.avalible", version).setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
 				event.player.addChatMessage(new ChatComponentTranslation("updatemsg.enviromine.download"));
 				event.player.addChatMessage(new ChatComponentText("https://github.com/Funwayguy/EnviroMine/wiki/Downloads").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.BLUE).setUnderlined(true)));
-				for(int i = 2; i < data.length; i++)
+				for(int i = 5; i < data.length; i++)
 				{
-					if(i > 5)
+					if(i > 8)
 					{
-						event.player.addChatMessage(new ChatComponentText("" + (data.length - 6) + " more..."));
+						event.player.addChatMessage(new ChatComponentText("" + (data.length - 9) + " more..."));
 						break;
 					} else
 					{
@@ -138,20 +137,20 @@ public class UpdateNotification
 				}
 			} else if(verStat == 0)
 			{
-				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "EnviroMine " + EM_Settings.Version + " is up to date"));
+				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + StatCollector.translateToLocalFormatted("updatemsg.enviromine.uptodate", EM_Settings.Version)));
 			} else if(verStat == 1)
 			{
-				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "EnviroMine " + EM_Settings.Version + " is a debug version"));
+				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + StatCollector.translateToLocalFormatted("updatemsg.enviromine.debug", EM_Settings.Version)));
 			} else if(verStat == -2)
 			{
-				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "An error occured while parsing EnviroMine's version file!"));
+				event.player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + StatCollector.translateToLocalFormatted("updatemsg.enviromine.error")));
 			}
 			
 		} catch(IOException e)
 		{
 			if(EM_Settings.updateCheck)
 			{
-				EnviroMine.logger.log(Level.WARN, "Failed to get versions file!");
+				EnviroMine.logger.log(Level.WARN, "Failed to get/read versions file!");
 			}
 		}
 	}
@@ -163,7 +162,7 @@ public class UpdateNotification
 	 * @return
 	 * @throws IOException
 	 */
-	private String getUrl(String link, boolean doRedirect) throws IOException
+	public static String getUrl(String link, boolean doRedirect) throws IOException
 	{
 		URL url = new URL(link);
 		HttpURLConnection.setFollowRedirects(false);
@@ -274,7 +273,6 @@ public class UpdateNotification
 	 */
 	public static boolean isNewPost()
 	{
-		
 		if(lastSeen == null) return true; 
 
 		 if(!WordPressPost.Posts.isEmpty())

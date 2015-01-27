@@ -101,6 +101,13 @@ public class HudItemAirQuality extends HudItem
 	{
 		GL11.glPushMatrix();
 		
+		float transx = (float)(this.posX - (this.posX * UI_Settings.guiScale));
+		float transy = (float)(this.posY - (this.posY * UI_Settings.guiScale));
+		
+		GL11.glTranslated(transx, transy, 0);
+		
+		GL11.glScalef((float)UI_Settings.guiScale, (float)UI_Settings.guiScale, (float)UI_Settings.guiScale);
+		
 		int airBar = MathHelper.ceiling_float_int((Gui_EventManager.tracker.airQuality / 100) * this.getWidth());
 		
 		int frameBorder = 4;
@@ -122,8 +129,8 @@ public class HudItemAirQuality extends HudItem
 			if(this.rotated)
 			{
 				int angle = -90;
-				int translateX = 0;
-				int translateY = 0;
+				//int translateX = 0;
+				//int translateY = 0;
 				GL11.glTranslatef(posX, posY, 0);
 				GL11.glRotatef(angle, 0, 0, 1);
 				GL11.glTranslatef(-posX + 6, -posY - 8 + (getWidth() / 2), 0);

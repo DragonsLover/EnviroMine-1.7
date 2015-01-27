@@ -232,9 +232,9 @@ public class EM_StatusManager
 		}
 		
 		DimensionProperties dimensionProp = null;
-		if(EM_Settings.dimensionProperties.containsKey(entityLiving.worldObj.provider.dimensionId))
+		if(DimensionProperties.base.hasProperty(entityLiving.worldObj.provider.dimensionId))
 		{ 
-			dimensionProp = EM_Settings.dimensionProperties.get(entityLiving.worldObj.provider.dimensionId);
+			dimensionProp = DimensionProperties.base.getProperty(entityLiving.worldObj.provider.dimensionId);
 		}
 		
 		
@@ -291,9 +291,9 @@ public class EM_StatusManager
 						if(checkBiome != null)
 						{
 							BiomeProperties biomeOverride = null;
-							if(EM_Settings.biomeProperties.containsKey(checkBiome.biomeID))
+							if(BiomeProperties.base.hasProperty(checkBiome))
 							{
-								biomeOverride = EM_Settings.biomeProperties.get(checkBiome.biomeID);
+								biomeOverride = BiomeProperties.base.getProperty(checkBiome);
 							}
 							
 							if(biomeOverride != null && biomeOverride.biomeOveride)
@@ -326,17 +326,9 @@ public class EM_StatusManager
 						meta = entityLiving.worldObj.getBlockMetadata(i + x, j + y, k + z);
 					}
 					
-					if(EM_Settings.blockProperties.containsKey("" + Block.blockRegistry.getNameForObject(block) + "," + meta) || EM_Settings.blockProperties.containsKey("" + Block.blockRegistry.getNameForObject(block)))
+					if(BlockProperties.base.hasProperty(block, meta))
 					{
-						BlockProperties blockProps = null;
-						
-						if(EM_Settings.blockProperties.containsKey("" + Block.blockRegistry.getNameForObject(block) + "," + meta))
-						{
-							blockProps = EM_Settings.blockProperties.get("" + Block.blockRegistry.getNameForObject(block) + "," + meta);
-						} else
-						{
-							blockProps = EM_Settings.blockProperties.get("" + Block.blockRegistry.getNameForObject(block));
-						}
+						BlockProperties blockProps = BlockProperties.base.getProperty(block, meta);
 						
 						if(blockProps.air > 0F)
 						{
@@ -407,18 +399,10 @@ public class EM_StatusManager
 					stackMult = (stack.stackSize-1F)/63F + 1F;
 				}
 				
-				if(EM_Settings.itemProperties.containsKey("" + Item.itemRegistry.getNameForObject(stack.getItem()) + "," + stack.getItemDamage()) || EM_Settings.itemProperties.containsKey("" + Item.itemRegistry.getNameForObject(stack.getItem())))
+				if(ItemProperties.base.hasProperty(stack))
 				{
-					ItemProperties itemProps;
-					
-					if(EM_Settings.itemProperties.containsKey("" + Item.itemRegistry.getNameForObject(stack.getItem()) + "," + stack.getItemDamage()))
-					{
-						itemProps = EM_Settings.itemProperties.get("" + Item.itemRegistry.getNameForObject(stack.getItem()) + "," + stack.getItemDamage());
-					} else
-					{
-						itemProps = EM_Settings.itemProperties.get("" + Item.itemRegistry.getNameForObject(stack.getItem()));
-					}
-					
+					ItemProperties itemProps = ItemProperties.base.getProperty(stack);
+	
 					if(itemProps.ambAir > 0F)
 					{
 						leaves += (itemProps.ambAir/0.1F) * stackMult;
@@ -552,9 +536,10 @@ public class EM_StatusManager
 			}
 		}
 		
-		List mobList = entityLiving.worldObj.getEntitiesWithinAABBExcludingEntity(entityLiving, AxisAlignedBB.getBoundingBox(entityLiving.posX - 2, entityLiving.posY - 2, entityLiving.posZ - 2, entityLiving.posX + 3, entityLiving.posY + 3, entityLiving.posZ + 3));
+		@SuppressWarnings("unchecked")
+		List<Entity> mobList = entityLiving.worldObj.getEntitiesWithinAABBExcludingEntity(entityLiving, AxisAlignedBB.getBoundingBox(entityLiving.posX - 2, entityLiving.posY - 2, entityLiving.posZ - 2, entityLiving.posX + 3, entityLiving.posY + 3, entityLiving.posZ + 3));
 		
-		Iterator iterator = mobList.iterator();
+		Iterator<Entity> iterator = mobList.iterator();
 		
 		float avgEntityTemp = 0.0F;
 		int validEntities = 0;
@@ -762,9 +747,9 @@ public class EM_StatusManager
 					}
 				}
 				
-				if(EM_Settings.armorProperties.containsKey(Item.itemRegistry.getNameForObject(helmet.getItem())))
+				if(ArmorProperties.base.hasProperty(helmet))
 				{
-					ArmorProperties props = EM_Settings.armorProperties.get(Item.itemRegistry.getNameForObject(helmet.getItem()));
+					ArmorProperties props = ArmorProperties.base.getProperty(helmet);
 					
 					if(isDay)
 					{
@@ -818,9 +803,9 @@ public class EM_StatusManager
 					}
 				}
 				
-				if(EM_Settings.armorProperties.containsKey(Item.itemRegistry.getNameForObject(plate.getItem())))
+				if(ArmorProperties.base.hasProperty(plate))
 				{
-					ArmorProperties props = EM_Settings.armorProperties.get(Item.itemRegistry.getNameForObject(plate.getItem()));
+					ArmorProperties props = ArmorProperties.base.getProperty(plate);
 					
 					if(isDay)
 					{
@@ -871,10 +856,10 @@ public class EM_StatusManager
 					}
 				}
 				
-				if(EM_Settings.armorProperties.containsKey(Item.itemRegistry.getNameForObject(legs.getItem())))
+				if(ArmorProperties.base.hasProperty(legs))
 				{
-					ArmorProperties props = EM_Settings.armorProperties.get(Item.itemRegistry.getNameForObject(legs.getItem()));
-					
+					ArmorProperties props = ArmorProperties.base.getProperty(legs);
+						
 					if(isDay)
 					{
 						if(entityLiving.worldObj.canBlockSeeTheSky(i, j, k) && bTemp > 0F)
@@ -924,9 +909,9 @@ public class EM_StatusManager
 					}
 				}
 				
-				if(EM_Settings.armorProperties.containsKey(Item.itemRegistry.getNameForObject(boots.getItem())))
+				if(ArmorProperties.base.hasProperty(boots))
 				{
-					ArmorProperties props = EM_Settings.armorProperties.get(Item.itemRegistry.getNameForObject(boots.getItem()));
+					ArmorProperties props = ArmorProperties.base.getProperty(boots);
 					
 					if(isDay)
 					{
@@ -1013,9 +998,9 @@ public class EM_StatusManager
 		}
 		
 		BiomeProperties biomeProp = null;
-		if(EM_Settings.biomeProperties.containsKey(biome.biomeID))
+		if(BiomeProperties.base.hasProperty(biome))
 		{
-			 biomeProp = EM_Settings.biomeProperties.get(biome.biomeID);
+			 biomeProp = BiomeProperties.base.getProperty(biome);
 
 			 if(biomeProp != null && biomeProp.biomeOveride)
 				{
