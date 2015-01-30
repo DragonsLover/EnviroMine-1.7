@@ -1,23 +1,26 @@
 package enviromine.trackers.items;
 
-import enviromine.core.EM_Settings;
-import enviromine.handlers.EM_PhysManager;
-import enviromine.trackers.properties.BiomeProperties;
-import enviromine.trackers.properties.BlockProperties;
-import enviromine.trackers.properties.EntityProperties;
-import enviromine.utils.EnviroUtils;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockFlower;
-import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.village.Village;
+import enviromine.trackers.EnviroData;
+import enviromine.trackers.NewEnviroDataTracker;
+import enviromine.trackers.properties.ArmorProperties;
+import enviromine.trackers.properties.BiomeProperties;
+import enviromine.trackers.properties.BlockProperties;
+import enviromine.trackers.properties.DimensionProperties;
+import enviromine.trackers.properties.EntityProperties;
+import enviromine.trackers.properties.ItemProperties;
 
 public abstract class EnviroTrackerItem 
 {
@@ -32,11 +35,10 @@ public abstract class EnviroTrackerItem
 	/**
 	 * Max Limit set a temporary maximum limit of value below valueMax
 	 */
-	public float maxLimit;
-	public float minLimit;
+	protected float maxLimit;
+	protected float minLimit;
 	
-	private float riseValue;
-	private float dropValue;
+	protected float valueDiff;
 	
 	private float MaxRiseValue;
 	private float MaxDropValue;
@@ -48,7 +50,7 @@ public abstract class EnviroTrackerItem
 	{
 		id = getDefaultID();
 		name = getName();
-		setValues(getStartValue(), 100F, 0F);
+		setDefaultValues(getStartValue(), 100F, 0F);
 	}
 	
 /**
@@ -59,12 +61,27 @@ public abstract class EnviroTrackerItem
  * @param max "Max Value"
  * @param min "Min Value"
  */
-	public void setValues(float cur, float max, float min)
+	public void setDefaultValues(float cur, float max, float min)
 	{
 		valueCur =  cur;
 		valueMax = max;
 		valueMin = min;
+		
+		maxLimit = max;
+		minLimit = min;
+		
 		prevValue = valueCur;
+		
+		valueDiff = 0;
+	}
+	
+	/**
+	 * Set a Temporary Max limit which can be higher or lower than its default max value.
+	 * @param limit
+	 */
+	public void setTempMaxLimit(float limit)
+	{
+		this.maxLimit = limit;
 	}
 	
 	public abstract int getDefaultID();
@@ -74,19 +91,122 @@ public abstract class EnviroTrackerItem
 	public abstract String getName();
 	
 	/**
-	 * This Returns data to EnviroData
+	 * This searches x Range around player for block data & biome data, <br> 
+	 * and passes each block in a loop
 	 * 
 	 * @param trackedEntity
 	 */
-	public abstract void LoopSurroundingData(EntityLivingBase trackedEntity);
+	public abstract void getSurroundingData(EnviroData enviroData, Block block, int Meta, int searchRange, BlockProperties blockProp, BiomeProperties biomeProp);
 	
-	public abstract void EntityPlayerAction(float[] enviroData, EntityLivingBase trackedEntity);
+	/**
+	 * This search in a range around the player for any mob and passes <br> 
+	 * in a loop to check and set tracker data for each mob type around player.
+	 * 
+	 * @param enviroData
+	 * @param mob
+	 * @param mobTrack
+	 * @param livingProp
+	 */
+	public abstract void mobFoundNear(EnviroData enviroData, Entity mob, NewEnviroDataTracker mobTrack, EntityProperties livingProp);
 	
-	public abstract void EntityAnimalAction(float[] enviroData, EntityAnimal trackedEntity);
+	/**
+	 * This loops each armor slot on player/entity checking for armor.<br>
+	 * When armor is found it will pass it into wearingArmor check and set tracker data
+	 *  
+	 * @param enviroData
+	 * @param armorSlot
+	 * @param armorPiece
+	 * @param enchTags
+	 * @param props
+	 */
+	public abstract void wearingArmor(EnviroData enviroData, int armorSlot, ItemStack armorPiece, NBTTagList enchTags, ArmorProperties props);
+	/**
+	 * If armor is found it will pass it into armorEnchants to <br>
+	 * check and set tracker data
+	 * @param enviroData
+	 * @param armorSlot
+	 * @param enID
+	 * @param enLV
+	 */
+	public abstract void armorEnchants(EnviroData enviroData, int armorSlot, int enID, int enLV);
 	
-	public abstract void SpecialAction(float[] enviroData, EntityLivingBase trackedEntity);
+	/**
+	 * This searches your HotBar for items and passes and ItemStack for checking against tracker data
+	 * 
+	 * @param enviroData
+	 * @param itemstack
+	 * @param stackMult
+	 * @param itemProp
+	 */
+	public abstract void inventorySearch(EnviroData enviroData, ItemStack itemstack,float stackMult, ItemProperties itemProp);
 	
-	public abstract void Tick_SideEffects(EntityLivingBase trackedEntity);
+	/**
+	 * If Player Check against Tracker data and Do Somthing
+	 * 
+	 * @param enviroData
+	 * @param trackedEntity
+	 * @param biomeProp
+	 * @param dimensionProp
+	 */
+	public abstract void ifEntityPlayer(EnviroData enviroData, EntityPlayer trackedEntity, BiomeProperties biomeProp, DimensionProperties dimensionProp);
+
+	/**
+	 * If Animal Check against Tracker data and Do Somthing
+	 * 
+	 * @param enviroData
+	 * @param trackedEntity
+	 * @param biomeProp
+	 * @param dimensionProp
+	 */
+
+	public abstract void ifEntityAnimal(EnviroData enviroData, EntityAnimal trackedEntity, EntityProperties entityProp, BiomeProperties biomeProp, DimensionProperties dimensionProp);
+	
+	/**
+	 * If Mob Check against Tracker data and Do Somthing
+	 * 
+	 * @param enviroData
+	 * @param trackedEntity
+	 * @param biomeProp
+	 * @param dimensionProp
+	 */
+	
+	public abstract void ifEntityMob(EnviroData enviroData, EntityMob trackedEntity, EntityProperties entityProp, BiomeProperties biomeProp, DimensionProperties dimensionProp);
+	
+	/**
+	 * If Villager was found and in Village, and Villager is able to help do something. Check against tracker
+	 * 
+	 * @param enviroData
+	 * @param villager
+	 * @param village
+	 * @param entityProp
+	 */
+	public abstract void villageAssist(EnviroData enviroData, EntityVillager villager, Village village, EntityProperties entityProp);
+	
+	/**
+	 * Overrides are used to make last minute changes before update tracker is called... ie: Biomes/Dimension/config Multipliers
+	 * 
+	 * @param enviroData
+	 * @param biomeProp
+	 * @param dimensionProp
+	 */
+	public abstract void Overrides(EnviroData enviroData, BiomeProperties biomeProp, DimensionProperties dimensionProp);
+	
+	/**
+	 * Updates Tracker data from all Envirodata gathered.
+	 *  
+	 * @param enviroData
+	 */
+	public abstract void updateTracker(EnviroData enviroData);
+	
+	/**
+	 * Applies Side Effects to entity if certain things happen
+	 * 
+	 * @param enviroData
+	 */
+	public abstract void applySideEffects(EnviroData enviroData);
+	
+	//public abstract void ifSideEffectActive(EnviroData enviroData);
+	
 	
 	public boolean isEnabledByDefault()
 	{
@@ -96,7 +216,15 @@ public abstract class EnviroTrackerItem
 	
 	public void fixValueBounds()
 	{
-		if(this.valueCur >= this.valueMax)
+		if(this.valueCur >= this.maxLimit)
+		{
+			this.valueCur = this.valueMax;
+		}
+		else if(this.valueCur <= this.minLimit)
+		{
+			this.valueCur = this.valueMin;
+		}
+		else if(this.valueCur >= this.valueMax)
 		{
 			this.valueCur = this.valueMax;
 		}
@@ -104,6 +232,16 @@ public abstract class EnviroTrackerItem
 		{
 			this.valueCur = this.valueMin;
 		}
+	}
+	
+	public void fixFloatinfPointErrors()
+	{
+		this.valueCur = new BigDecimal(String.valueOf(this.valueCur)).setScale(2, RoundingMode.HALF_UP).floatValue();
+	}
+	
+	public void resetNumbers()
+	{
+		this.valueDiff = 0F;
 	}
 	
 	public void saveToNBT() 

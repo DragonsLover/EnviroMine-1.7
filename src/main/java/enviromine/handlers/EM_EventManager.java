@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+
 import net.minecraft.block.BlockJukebox.TileEntityJukebox;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -80,8 +81,10 @@ import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Save;
 import net.minecraftforge.event.world.WorldEvent.Unload;
+
 import org.apache.logging.log4j.Level;
 import org.lwjgl.opengl.GL11;
+
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.Event.Result;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -100,6 +103,7 @@ import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.gases.GasBuffer;
 import enviromine.network.packet.PacketEnviroMine;
+import enviromine.trackers.NewEnviroDataTracker;
 import enviromine.trackers.EnviroDataTracker;
 import enviromine.trackers.Hallucination;
 import enviromine.trackers.properties.BiomeProperties;
@@ -165,7 +169,8 @@ public class EM_EventManager extends LockedClass
 			if(EnviroDataTracker.isLegalType((EntityLivingBase)event.entity) && (event.entity instanceof EntityPlayer || EM_Settings.trackNonPlayer) && allowTracker)
 			{
 				boolean hasOld = false;
-				
+				//TODO Remove as this is temp
+				/*
 				if(event.entity instanceof EntityPlayer)
 				{
 					EnviroDataTracker oldTrack = EM_StatusManager.lookupTrackerFromUsername(event.entity.getCommandSenderName());
@@ -175,12 +180,16 @@ public class EM_EventManager extends LockedClass
 						oldTrack.loadNBTTags();
 						hasOld = true;
 					}
-				}
+				}*/
 				
 				if(!hasOld)
 				{
 					EnviroDataTracker emTrack = new EnviroDataTracker((EntityLivingBase)event.entity);
+					NewEnviroDataTracker emTrackNew = new NewEnviroDataTracker((EntityLivingBase)event.entity);
+					
 					EM_StatusManager.addToManager(emTrack);
+					EM_StatusManager.addToNewManager(emTrackNew);
+					
 					emTrack.loadNBTTags();
 					if(!EnviroMine.proxy.isClient() || EnviroMine.proxy.isOpenToLAN())
 					{
@@ -1036,6 +1045,7 @@ public class EM_EventManager extends LockedClass
 		}
 		
 		EnviroDataTracker tracker = EM_StatusManager.lookupTracker(event.entityLiving);
+		NewEnviroDataTracker trackerNew = EM_StatusManager.lookupTrackerNew(event.entityLiving);
 		
 		if(tracker == null)
 		{
@@ -1060,6 +1070,7 @@ public class EM_EventManager extends LockedClass
 		}
 		
 		EM_StatusManager.updateTracker(tracker);
+		EM_StatusManager.updateTrackerNew(trackerNew);
 		
 		UUID EM_DEHY1_ID = EM_Settings.DEHY1_UUID;
 		

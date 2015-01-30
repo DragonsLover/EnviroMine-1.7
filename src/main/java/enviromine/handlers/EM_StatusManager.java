@@ -48,8 +48,8 @@ import enviromine.client.gui.hud.items.Debug_Info;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
 import enviromine.network.packet.PacketEnviroMine;
+import enviromine.trackers.NewEnviroDataTracker;
 import enviromine.trackers.EnviroDataTracker;
-import enviromine.trackers.items.EnviroDataManager;
 import enviromine.trackers.properties.ArmorProperties;
 import enviromine.trackers.properties.BiomeProperties;
 import enviromine.trackers.properties.BlockProperties;
@@ -61,7 +61,7 @@ import enviromine.utils.EnviroUtils;
 public class EM_StatusManager
 {
 	public static HashMap<String,EnviroDataTracker> trackerList = new HashMap<String,EnviroDataTracker>();
-	public static HashMap<String,EnviroDataManager> NEWtrackerList = new HashMap<String,EnviroDataManager>();
+	public static HashMap<String,NewEnviroDataTracker> NEWtrackerList = new HashMap<String,NewEnviroDataTracker>();
 	
 	public static void addToManager(EnviroDataTracker tracker)
 	{
@@ -71,6 +71,63 @@ public class EM_StatusManager
 		} else
 		{
 			trackerList.put("" + tracker.trackedEntity.getEntityId(), tracker);
+		}
+	}
+	
+	public static void addToNewManager(NewEnviroDataTracker tracker)
+	{
+		if(tracker.trackedEntity instanceof EntityPlayer)
+		{
+			NEWtrackerList.put("" + tracker.trackedEntity.getCommandSenderName(), tracker);
+		} else
+		{
+			NEWtrackerList.put("" + tracker.trackedEntity.getEntityId(), tracker);
+		}
+	}
+	public static void updateTrackerNew(NewEnviroDataTracker tracker)
+	{
+		if(tracker == null)
+		{
+			return;
+		}
+		
+		if(EnviroMine.proxy.isClient() && Minecraft.getMinecraft().isIntegratedServerRunning())
+		{
+			if(Minecraft.getMinecraft().isGamePaused() && !EnviroMine.proxy.isOpenToLAN())
+			{
+				return;
+			}
+		}
+		
+		tracker.updateTimer += 1;
+		
+		if(tracker.updateTimer >= 30)
+		{
+			tracker.updateData();
+			
+		}
+	}
+	
+	public static NewEnviroDataTracker lookupTrackerNew(EntityLivingBase entity)
+	{
+		if(entity instanceof EntityPlayer)
+		{
+			if(trackerList.containsKey("" + entity.getCommandSenderName()))
+			{
+				return NEWtrackerList.get("" + entity.getCommandSenderName());
+			} else
+			{
+				return null;
+			}
+		} else
+		{
+			if(trackerList.containsKey("" + entity.getEntityId()))
+			{
+				return NEWtrackerList.get("" + entity.getEntityId());
+			} else
+			{
+				return null;
+			}
 		}
 	}
 	

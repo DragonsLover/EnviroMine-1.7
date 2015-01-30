@@ -2,11 +2,15 @@ package enviromine.trackers.properties;
 
 import java.io.File;
 import java.util.Iterator;
+
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.config.Configuration;
+
 import org.apache.logging.log4j.Level;
+
 import enviromine.core.EM_ConfigHandler;
 import enviromine.core.EM_Settings;
 import enviromine.core.EnviroMine;
@@ -70,6 +74,28 @@ public class EntityProperties implements SerialisableProperty, PropertyBase
 		this.hitHydration = hHyd;
 	}
 
+	/**
+	 * <b>hasProperty(BiomeGenBase biome)</b><bR><br>
+	 * Checks if Property contains custom properties.
+	 * @param biome
+	 * @return true if has custom properties
+	 */
+	public boolean hasProperty(EntityLivingBase entity)
+	{
+		return EM_Settings.livingProperties.containsKey(entity.getEntityId());
+	}
+	/** 
+	 * 	<b>getProperty(BiomeGenBase biome)</b><bR><br>
+	 * Gets Property.
+	 * @param biome
+	 * @return BiomeProperties
+	 */
+	public EntityProperties getProperty(EntityLivingBase entity)
+	{
+		return EM_Settings.livingProperties.get(entity.getEntityId());
+	}
+	
+	
 	@Override
 	public NBTTagCompound WriteToNBT()
 	{
